@@ -32,8 +32,8 @@ for i in range(starting_frame,ending_frame+1):
     
 training_files, testing_files = sklearn.cross_validation.train_test_split(all_files,train_size=0.8,random_state=1634120)
     
-X_training,y_training = utils.make_X_y(training_files,288,384)
-X_testing,y_testing = utils.make_X_y(testing_files,288,384)
+X_training,y_training = utils.make_X_y(training_files,288,384,(0,0),(90,90))
+X_testing,y_testing = utils.make_X_y(testing_files,288,384,(0,0),(90,90))
 
 
 n1 = 288*384
