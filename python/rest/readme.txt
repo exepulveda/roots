@@ -21,10 +21,10 @@ classified as "good images" for a frame. We refer to as cassified-images to the 
 set of "good images" (sorted by order of appearence in the video). 
 
 1. Searching for a windows-frame
-A windows-frame is defined as a subset of the classified-images such that each contiguous 
-pair of images in the windows-frame are contiguous in the classified-images. 
+A windows-frame is defined as a sorted subset of the classified-images such that each contiguous 
+pair of images in the windows-frame are also contiguous in the classified-images. 
 We fix the size of the windows-frame (number of images) and we search for the windows
-frame with less error. Here, the error is defined as the sum of histogram distances of each
+frame with less error. Here, error is defined as the sum of histogram distances of each
 image in the windows-frame w.r.t. the central image in the windows-frame. 
 
 
@@ -32,8 +32,8 @@ image in the windows-frame w.r.t. the central image in the windows-frame.
 After the best windows-frame is found, we reduce it into a single image following 2 steps:
 
   a) Registering all images w.r.t. the central image in the windows-frame.
-  b) Each pixel of the single image is obtained as the median of the pixels
-     of all registered images at the same position.
+  b) Each pixel of the single image is obtained as the median of the pixels with same position
+     in all the registered images.
 
  
 
