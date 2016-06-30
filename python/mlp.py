@@ -14,17 +14,13 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import SGD, Adam, RMSprop
 from keras.utils import np_utils
+from keras.models import model_from_json
 
 import utils
 import cross_validation
 import os
 import os.path
 import sklearn
-
-
-batch_size = 128
-nb_classes = 2
-nb_epoch = 200
 
 # the data, shuffled and split between train and test sets
 def load_data(image_list):
@@ -46,26 +42,23 @@ def load_data(image_list):
     X_testing,y_testing = utils.make_X_y(testing_files,288,384)
     return (X_training, y_training), (X_testing, y_testing)
 
-
-
-images_path = "../1.11"
-(X_train, y_train), (X_test, y_test) = load_data(images_path)
-
-def make_model(input_size,h1,h2,classes):
+def make_model(input_size,h1,h2=None,h3=None,classes=1,lr=0.001,activation='sigmoid',dropout=0.5):
     model = Sequential()
-    model.add(Dense(h1, input_shape=(input_size,)))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(h2))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(classes))
-    model.add(Activation('softmax'))
+    model.add(Dense(h1, input_shape=(input_size,),init='lecun_uniform'))
+    model.add(Activation(activation))
+    model.add(Dropout(dropout))
+    if h2 is not None:
+        model.add(Dense(h2,init='lecun_uniform',activation=activation))
+        model.add(Dropout(dropout))
+    if h3 is not None:
+        model.add(Dense(h3,init='lecun_uniform',activation=activation))
+        model.add(Dropout(dropout))
+    model.add(Dense(classes,activation='softmax' if classes > 1 else 'sigmoid',init='lecun_uniform'))
 
     model.summary()
 
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=RMSprop(),
+    model.compile(loss='categorical_crossentropy' if classes > 1 else 'binary_crossentropy',
+                  optimizer=SGD(lr=lr),
                   metrics=['accuracy'])
                   
     return model
@@ -79,8 +72,12 @@ def train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch):
     print(X_test.shape[0], 'test samples')
 
     # convert class vectors to binary class matrices
-    Y_train = np_utils.to_categorical(y_train, nb_classes)
-    Y_test = np_utils.to_categorical(y_test, nb_classes)
+    if nb_classes > 1:
+        Y_train = np_utils.to_categorical(y_train, nb_classes)
+        Y_test = np_utils.to_categorical(y_test, nb_classes)
+    else:
+        Y_train = y_train
+        Y_test = y_test
     
     history = model.fit(X_train, Y_train,
                     batch_size=batch_size, nb_epoch=nb_epoch,
@@ -88,3 +85,41 @@ def train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch):
     score = model.evaluate(X_test, Y_test, verbose=0)
 
     return score
+
+def train_on_batch(model, X_train,X_test,y_train,y_test,nb_classes):
+    X_train = X_train.astype('float32')
+    X_test = X_test.astype('float32')
+    X_train /= 255
+    X_test /= 255
+    #print(X_train.shape[0], 'train samples')
+    #print(X_test.shape[0], 'test samples')
+
+    # convert class vectors to binary class matrices
+    Y_train = np_utils.to_categorical(y_train, nb_classes)
+    Y_test = np_utils.to_categorical(y_test, nb_classes)
+    
+    model.train_on_batch(X_train, Y_train)
+    
+    score = model.test_on_batch(X_test, Y_test)
+    
+    return score
+
+def test(model, X,y,nb_classes):
+    X_test = X.astype('float32')
+    X_test /= 255
+
+    # convert class vectors to binary class matrices
+    Y_test = np_utils.to_categorical(y, nb_classes)
+    return model.test_on_batch(X_test, Y_test)
+
+
+def load_model(model_filename,model_weights_filename):
+    model = model_from_json(model_filename)
+    model.load_weights(model_weights_filename)
+
+    return model
+
+def save_model(model,model_filename,model_weights_filename):
+    json_string = model.to_json()
+    open(model_filename, 'w').write(json_string)
+    model.save_weights(model_weights_filename)

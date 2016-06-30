@@ -51,12 +51,13 @@ if __name__ == "__main__":
     testing_set = []
     
     input_size = 288*384
-    h1 = 512
-    h2 = 128
+    h1 = 1024
+    h2 = 256
+    h3 = None
     nb_classes = 2
     
     batch_size = 100
-    nb_epoch = 200
+    nb_epoch = 20
     
     for i,image_list in enumerate(images):
         print("processing k-fold",i)
@@ -64,7 +65,7 @@ if __name__ == "__main__":
         #set i-th is the validation set
         for k  in range(len(images)):
             if k != i:
-                training_set += image_list
+                training_set += images[k]
         
         testing_set = image_list
         
@@ -89,7 +90,7 @@ if __name__ == "__main__":
         X_test,y_test = utils.make_X_y(testing_set,288,384) 
         
         print("making model")
-        model = mlp.make_model(input_size,h1,h2,nb_classes)
+        model = mlp.make_model(input_size,h1,h2,h3,nb_classes,activation='relu')
         
         print("training model")
         score = mlp.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch)
@@ -97,3 +98,5 @@ if __name__ == "__main__":
         print('Cross Validation result at:', i)
         print('Test score:', score[0])
         print('Test accuracy:', score[1])
+        
+        mlp.save_model(model,"model-{0}.json".format(i),"model-{0}.h5".format(i))        

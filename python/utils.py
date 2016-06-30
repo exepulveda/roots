@@ -32,9 +32,9 @@ def make_X_y(images,w,h,offset=None,size=None):
         
         if size is not None and offset is not None:
             #need to reduce image
-            print image.shape,offset,size
+            #print image.shape,offset,size
             image = image[offset[0]:(offset[0] + size[0]),offset[1]:(offset[1] + size[1])]
-            print image.shape
+            #print image.shape
 
         X[i,:] = image.flatten()
         y[i] = tag
