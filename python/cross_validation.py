@@ -50,17 +50,18 @@ if __name__ == "__main__":
     print(len(images))
 
     input_size = 288*384
-    h1 = 512
-    h2 = 128
+    
+    h1 = 1024
+    h2 = 256
+    h3 = None
     nb_classes = 2
     
     batch_size = 100
-    nb_epoch = 200
+    nb_epoch = 50
     
     for i,image_list in enumerate(images):
         training_set = []
         testing_set = []
-    
         print("processing k-fold",i)
         
         #set i-th is the validation set
@@ -77,9 +78,9 @@ if __name__ == "__main__":
         random.shuffle(training_set)
         random.shuffle(testing_set)
         
-        #print("loading images")
-        #print("training_set size",len(training_set))
-        #print("testing_set size",len(testing_set))
+        print("loading images")
+        print("training_set size",len(training_set))
+        print("testing_set size",len(testing_set))
 
         #print("training_set size",len(training_set)*(input_size/1.0e9))
         #print("testing_set size",len(testing_set)*(input_size/1.0e9))
@@ -90,8 +91,10 @@ if __name__ == "__main__":
         X_train,y_train = utils.make_X_y(training_set,288,384)
         X_test,y_test = utils.make_X_y(testing_set,288,384) 
         
-        model = mlp.make_model(input_size,h1,h2,nb_classes)
+        model = mlp.make_model(input_size,h1,h2=h2,classes=nb_classes)
         
         score = mlp.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch)
         
         print('CV,', i, ",training size,",len(training_set),",testing size,",len(testing_set),',Test score,', score[0],',Test accuracy,', score[1])
+        
+        mlp.save_model(model,"model-binary-cv-{0}.json".format(i),"model-binary-cv-{0}.h5".format(i))        

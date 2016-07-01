@@ -10,7 +10,58 @@ from sklearn.ensemble import RandomForestClassifier
 import sklearn.neighbors
 from PIL import Image
 
-def make_X_y(images,w,h,offset=None,size=None):
+def make_X_y_convnet(images,w,h,offset=None,size=None):
+    n = len(images)
+    
+    if size is not None and offset is not None:
+        final_w = size[0]
+        final_h = size[1]
+    else:
+        final_w = w
+        final_h = h
+    
+    X = None
+    y = None
+    
+    shape = None
+
+    #built training X and y
+    for i,(image_filename,tag) in enumerate(images):
+        #print image_filename,tag
+        image = Image.open(image_filename)
+        
+        if shape is None:
+            h = image.height
+            w = image.width
+            l = image.layers
+            shape = (l,w,h)
+
+            X = np.empty((n,l,final_w,final_h))
+            y = np.empty(n,dtype=np.int32)
+        
+        
+        im = np.array(image,dtype=np.float32)# / 255.0
+        #im = np.array(image)# / 255.0
+        
+        if size is not None and offset is not None:
+            #need to reduce image
+            #print image.shape,offset,size
+            im = im[offset[1]:(offset[1] + size[1]),offset[0]:(offset[0] + size[0]),:]
+            im = np.swapaxes(im,0,1)
+            #print image.shape
+
+        for c in range(l):
+            X[i,c,:,:] = im[:,:,c]
+            
+        if i ==0:
+            print im[:10,:10,0]
+        
+        y[i] = tag
+
+    return X,y
+
+
+def make_X_y(images,w,h,offset=None,size=None,all_channes=False):
     n = len(images)
     
     if size is not None and offset is not None:
@@ -26,8 +77,11 @@ def make_X_y(images,w,h,offset=None,size=None):
     #built training X and y
     for i,(image_filename,tag) in enumerate(images):
         #print image_filename,tag
-        image = Image.open(image_filename).convert('L')
-        image = np.array(image) / 255.0
+        image = Image.open(image_filename)
+        if not all_channes:
+            image = image.convert('L')
+            
+        image = np.array(image)# / 255.0
         
         if size is not None and offset is not None:
             #need to reduce image
@@ -47,8 +101,10 @@ def make_X(images,w,h):
     #built training X and y
     for i,image_filename in enumerate(images):
         #print image_filename,tag
-        image = Image.open(image_filename).convert('L')
-        image = np.array(image) / 255.0
+        image = Image.open(image_filename)
+        if not all_channes:
+            image = image.convert('L')
+        image = np.array(image)# / 255.0
 
         X[i,:] = image.flatten()
 

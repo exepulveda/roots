@@ -13,6 +13,8 @@ import random
 import numpy as np
 
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+
 import sklearn.metrics
 
 def set_cross_validation(folders):
@@ -44,10 +46,10 @@ if __name__ == "__main__":
     folders = [
         "../training/1.11",
         "../training/1.12",
-        #"../training/1.13",
-        #"../training/1.14",
-        #"../training/1.15",
-        #"../training/1.16",
+        "../training/1.13",
+        "../training/1.14",
+        "../training/1.15",
+        "../training/1.16",
     ]
     images = set_cross_validation(folders)
 
@@ -78,18 +80,19 @@ if __name__ == "__main__":
         print("training_set size",len(training_set))
         print("testing_set size",len(testing_set))
 
-        print("training_set size",len(training_set)*(input_size/1.0e9))
-        print("testing_set size",len(testing_set)*(input_size/1.0e9))
+        #print("training_set size",len(training_set)*(input_size/1.0e9))
+        #print("testing_set size",len(testing_set)*(input_size/1.0e9))
 
         print("making model")
-        model = RandomForestClassifier()
+        #model = RandomForestClassifier()
+        model = SVC(kernel="linear", C=0.025)
 
 
-        X_train,y_train = utils.make_X_y(training_set,288,384,offset=[0,0],size=[80,90])
-        X_test_all,y_test_all = utils.make_X_y(testing_set,288,384,offset=[0,0],size=[80,90]) 
+        X_train,y_train = utils.make_X_y(training_set,288,384,offset=[25,20],size=[60,50])
+        X_test_all,y_test_all = utils.make_X_y(testing_set,288,384,offset=[25,20],size=[60,50]) 
 
         model.fit(X_train, y_train)
 
         y_pred = model.predict(X_test_all)
         ret = sklearn.metrics.confusion_matrix(y_test_all, y_pred)
-        print(sklearn.metrics.classification_report(y_test_all, y_pred))
+        print(model.score(X_test_all,y_test_all))
