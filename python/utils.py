@@ -11,6 +11,30 @@ from sklearn.ensemble import RandomForestClassifier
 import sklearn.neighbors
 from PIL import Image
 
+def load_image(image_filename,w,h,offset=None,size=None):
+    if size is not None and offset is not None:
+        final_w = size[0]
+        final_h = size[1]
+    else:
+        final_w = w
+        final_h = h
+    
+    X = np.empty((final_w*final_h))
+
+    image = Image.open(image_filename).convert('L')
+    image = np.array(image,dtype=np.float32)
+    
+    if size is not None and offset is not None:
+        #need to reduce image
+        #print image.shape,offset,size
+        image = image[offset[0]:(offset[0] + size[0]),offset[1]:(offset[1] + size[1])]
+        #print image.shape
+
+    X[:] = image.flatten()
+
+    return X
+
+
 def make_X_y(images,w,h,offset=None,size=None):
     n = len(images)
     
@@ -26,17 +50,7 @@ def make_X_y(images,w,h,offset=None,size=None):
 
     #built training X and y
     for i,(image_filename,tag) in enumerate(images):
-        #print image_filename,tag
-        image = Image.open(image_filename).convert('L')
-        image = np.array(image) / 255.0
-        
-        if size is not None and offset is not None:
-            #need to reduce image
-            #print image.shape,offset,size
-            image = image[offset[0]:(offset[0] + size[0]),offset[1]:(offset[1] + size[1])]
-            #print image.shape
-
-        X[i,:] = image.flatten()
+        X[i,:] = load_image(image_filename,w,h,offset,size)
         y[i] = tag
 
     return X,y

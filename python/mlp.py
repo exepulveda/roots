@@ -14,7 +14,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import SGD, Adam, RMSprop
 from keras.utils import np_utils
-from keras.models import model_from_json
+from keras.models import model_from_json,model_from_yaml
 
 import utils
 import cross_validation
@@ -114,12 +114,13 @@ def test(model, X,y,nb_classes):
 
 
 def load_model(model_filename,model_weights_filename):
-    model = model_from_json(model_filename)
+    print("loading",model_filename,model_weights_filename)
+    model = model_from_json(open(model_filename).read())    
     model.load_weights(model_weights_filename)
 
     return model
 
 def save_model(model,model_filename,model_weights_filename):
-    json_string = model.to_json()
-    open(model_filename, 'w').write(json_string)
-    model.save_weights(model_weights_filename)
+    model_string = model.to_json()
+    open(model_filename, 'w').write(model_string)
+    model.save_weights(model_weights_filename,overwrite=True)
