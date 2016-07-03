@@ -44,13 +44,13 @@ if __name__ == "__main__":
 
     input_size = 288*384
     
-    h1 = 1024
+    h1 = 512
     h2 = 256
     h3 = None
     nb_classes = 2
     
     batch_size = 100
-    nb_epoch = 50
+    nb_epoch = 150
     
     training_set = []
         

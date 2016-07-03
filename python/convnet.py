@@ -168,4 +168,4 @@ def save_model(model,model_filename,model_weights_filename):
     print("saving model",model_filename,model_weights_filename)
     json_string = model.to_json()
     open(model_filename, 'w').write(json_string)
-    model.save_weights(model_weights_filename)
+    model.save_weights(model_weights_filename,overwrite=True)
