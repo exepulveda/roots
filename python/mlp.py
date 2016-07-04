@@ -42,7 +42,7 @@ def load_data(image_list):
     X_testing,y_testing = utils.make_X_y(testing_files,288,384)
     return (X_training, y_training), (X_testing, y_testing)
 
-def make_model(input_size,h1,h2=None,h3=None,classes=1,lr=0.001,activation='sigmoid',dropout=0.5):
+def make_model(input_size,h1,h2=None,h3=None,classes=1,lr=0.01,activation='sigmoid',dropout=0.5):
     model = Sequential()
     model.add(Dense(h1, input_shape=(input_size,),init='lecun_uniform'))
     model.add(Activation(activation))
@@ -58,45 +58,58 @@ def make_model(input_size,h1,h2=None,h3=None,classes=1,lr=0.001,activation='sigm
     model.summary()
 
     model.compile(loss='categorical_crossentropy' if classes > 1 else 'binary_crossentropy',
-                  optimizer=SGD(lr=lr),
+                  optimizer=SGD(lr=lr,decay=0.1),
                   metrics=['accuracy'])
                   
     return model
 
 def train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch):
     X_train = X_train.astype('float32')
-    X_test = X_test.astype('float32')
-    X_train /= 255
-    X_test /= 255
-    print(X_train.shape[0], 'train samples')
-    print(X_test.shape[0], 'test samples')
 
+    X_train /= 255.0
+    
+    if X_test is not None:
+        X_test = X_test.astype('float32')
+        X_test /= 255.0
+    
     # convert class vectors to binary class matrices
     if nb_classes > 1:
         Y_train = np_utils.to_categorical(y_train, nb_classes)
-        Y_test = np_utils.to_categorical(y_test, nb_classes)
+        if X_test is not None:
+            Y_test = np_utils.to_categorical(y_test, nb_classes)
     else:
         Y_train = y_train
-        Y_test = y_test
+        if X_test is not None:
+            Y_test = y_test
+        
     
-    history = model.fit(X_train, Y_train,
+    if X_test is not None:
+        history = model.fit(X_train, Y_train,
                     batch_size=batch_size, nb_epoch=nb_epoch,
                     verbose=1, validation_data=(X_test, Y_test))
-    score = model.evaluate(X_test, Y_test, verbose=0)
+        score = model.evaluate(X_test, Y_test, verbose=0)
+        return score
 
-    return score
+    else:
+        history = model.fit(X_train, Y_train,
+                    batch_size=batch_size, nb_epoch=nb_epoch,
+                    verbose=0)
+
+        return None
 
 def train_on_batch(model, X_train,X_test,y_train,y_test,nb_classes):
     X_train = X_train.astype('float32')
-    X_test = X_test.astype('float32')
-    X_train /= 255
-    X_test /= 255
+    X_train /= 255.0
+    if X_test is not None:
+        X_test = X_test.astype('float32')
+        X_test /= 255.0
     #print(X_train.shape[0], 'train samples')
     #print(X_test.shape[0], 'test samples')
 
     # convert class vectors to binary class matrices
     Y_train = np_utils.to_categorical(y_train, nb_classes)
-    Y_test = np_utils.to_categorical(y_test, nb_classes)
+    if X_test is not None:
+        Y_test = np_utils.to_categorical(y_test, nb_classes)
     
     model.train_on_batch(X_train, Y_train)
     
@@ -104,9 +117,10 @@ def train_on_batch(model, X_train,X_test,y_train,y_test,nb_classes):
     
     return score
 
-def test(model, X,y,nb_classes):
+def test(model, X,y,x_mean,x_max,nb_classes):
     X_test = X.astype('float32')
-    X_test /= 255
+    X_test -= x_mean
+    X_test /= x_max
 
     # convert class vectors to binary class matrices
     Y_test = np_utils.to_categorical(y, nb_classes)

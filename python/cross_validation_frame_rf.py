@@ -10,8 +10,12 @@ import utils
 import os
 import os.path
 import random
+import numpy as np
 
-import mlp
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+
+import sklearn.metrics
 
 def set_cross_validation(folders):
     '''Define a list with all videos. Folders contains a list of paths
@@ -19,11 +23,6 @@ def set_cross_validation(folders):
     '''
     images = []
     for images_path in folders:
-        #bads images
-        filenames = []
-        utils.expand_folder(os.path.join(images_path,"bads"),filenames)
-        bads_filenames = [(x,0) for x in filenames]
-        #oksimages
         oks_filenames = []
         for i in range(6,55):
             #making folder name
@@ -32,37 +31,36 @@ def set_cross_validation(folders):
             oks_filenames += [(x,i) for x in filenames]
             
         
-        images += [bads_filenames + oks_filenames] 
+        images += [oks_filenames] 
         
     return images
 
+def make_batches(size, batch_size):
+    '''Returns a list of batch indices (tuples of indices).
+    '''
+    nb_batch = int(np.ceil(size / float(batch_size)))
+    return [(i * batch_size, min(size, (i + 1) * batch_size))
+            for i in range(0, nb_batch)]
+
 if __name__ == "__main__":
     folders = [
-        "/home/a1634120/roots/training/1.11",
-        "/home/a1634120/roots/training/1.12",
-        "/home/a1634120/roots/training/1.13",
-        "/home/a1634120/roots/training/1.14",
-        "/home/a1634120/roots/training/1.15",
-        "/home/a1634120/roots/training/1.16",
+        "../training/1.11",
+        "../training/1.12",
+        "../training/1.13",
+        "../training/1.14",
+        "../training/1.15",
+        "../training/1.16",
     ]
     images = set_cross_validation(folders)
 
-    print(len(images))
-
-    input_size = 288*384
     
-    h1 = 1024
-    h2 = 256
-    h3 = None
-    nb_classes = 2
-    
-    batch_size = 100
-    nb_epoch = 50
+    input_size = 80*90
+    nb_classes = 54-6+1 #49
     
     for i,image_list in enumerate(images):
+        print("processing k-fold",i)
         training_set = []
         testing_set = []
-        print("processing k-fold",i)
         
         #set i-th is the validation set
         for k  in range(len(images)):
@@ -72,8 +70,8 @@ if __name__ == "__main__":
         testing_set = image_list
         
         #first god/bad classifier
-        training_set = [(x,0 if y == 0 else 1) for x,y in training_set]
-        testing_set = [(x,0 if y == 0 else 1) for x,y in testing_set]
+        #training_set = [(x,0 if y == 0 else 1) for x,y in training_set]
+        #testing_set = [(x,0 if y == 0 else 1) for x,y in testing_set]
 
         random.shuffle(training_set)
         random.shuffle(testing_set)
@@ -85,16 +83,16 @@ if __name__ == "__main__":
         #print("training_set size",len(training_set)*(input_size/1.0e9))
         #print("testing_set size",len(testing_set)*(input_size/1.0e9))
 
-        #training_set = training_set[:1000]
-        #testing_set = testing_set[:500]
-        
-        X_train,y_train = utils.make_X_y(training_set,288,384)
-        X_test,y_test = utils.make_X_y(testing_set,288,384) 
-        
-        model = mlp.make_model(input_size,h1,h2=h2,classes=nb_classes)
-        
-        score = mlp.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch)
-        
-        print('CV,', i, ",training size,",len(training_set),",testing size,",len(testing_set),',Test score,', score[0],',Test accuracy,', score[1])
-        
-        mlp.save_model(model,"model-binary-cv-{0}.json".format(i),"model-binary-cv-{0}.h5".format(i))        
+        print("making model")
+        #model = RandomForestClassifier()
+        model = SVC(kernel="linear", C=0.025)
+
+
+        X_train,y_train = utils.make_X_y(training_set,288,384,offset=[25,20],size=[60,50])
+        X_test_all,y_test_all = utils.make_X_y(testing_set,288,384,offset=[25,20],size=[60,50]) 
+
+        model.fit(X_train, y_train)
+
+        y_pred = model.predict(X_test_all)
+        ret = sklearn.metrics.confusion_matrix(y_test_all, y_pred)
+        print(model.score(X_test_all,y_test_all))
