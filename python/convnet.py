@@ -183,12 +183,9 @@ def train(model, X_train_original,X_test_original,y_train,y_test,nb_classes,batc
     mean_value = np.mean(X_train_original)
     max_value = np.std(X_train_original)
 
-    X_train = X_train_original - mean_value
-    X_test = X_test_original - mean_value
-
-
-    X_train /= max_value
-    X_test /= max_value
+    X_train = (X_train_original - mean_value) / max_value
+    if X_test_original is not None:
+        X_test = (X_test_original - mean_value) / max_value
 
     print ("mean",mean_value,"max",max_value)
 
@@ -197,16 +194,23 @@ def train(model, X_train_original,X_test_original,y_train,y_test,nb_classes,batc
 
     # convert class vectors to binary class matrices
     Y_train = np_utils.to_categorical(y_train, nb_classes)
-    Y_test = np_utils.to_categorical(y_test, nb_classes)
+    if X_test_original is not None:
+        Y_test = np_utils.to_categorical(y_test, nb_classes)
     
-    history = model.fit(X_train, Y_train,
+    if X_test_original is not None:
+        history = model.fit(X_train, Y_train,
+                        batch_size=batch_size, nb_epoch=nb_epoch,
+                        verbose=1, validation_data=(X_test, Y_test),callbacks=callbacks)
+                        
+        score = model.evaluate(X_test, Y_test, verbose=1)
+
+        return score,max_value,mean_value
+    else:
+        history = model.fit(X_train, Y_train,
                     batch_size=batch_size, nb_epoch=nb_epoch,
-                    verbose=1, validation_data=(X_test, Y_test),callbacks=callbacks)
-                    
-    score = model.evaluate(X_test, Y_test, verbose=0)
+                    verbose=1)
 
-    return score,max_value,mean_value
-
+        return None,max_value,mean_value
 
 def test(model,max_value,mean_value,X,y,nb_classes):
     #X_test = X.astype('float32')
@@ -220,6 +224,7 @@ def test(model,max_value,mean_value,X,y,nb_classes):
 
 def load_model(model_filename,model_weights_filename):
     model = model_from_json(model_filename)
+    model.compile()
     model.load_weights(model_weights_filename)
 
     return model

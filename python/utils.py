@@ -49,7 +49,9 @@ def load_image_convnet(image_filename,w,h,offset=None,size=None):
     if size is not None and offset is not None:
         #need to reduce image
         #print image.shape,offset,size
-        image = image[offset[0]:(offset[0] + size[0]),offset[1]:(offset[1] + size[1])]
+        #image = image[offset[0]:(offset[0] + size[0]),offset[1]:(offset[1] + size[1])]
+        image = image[offset[1]:(offset[1] + size[1]),offset[0]:(offset[0] + size[0])]
+        image = np.swapaxes(image,0,1)
         #print image.shape
 
     X[0,0,:,:] = image
@@ -85,7 +87,7 @@ def make_X_y_convnet(images,w,h,offset=None,size=None):
             y = np.empty(n,dtype=np.int32)
         
         
-        im = np.array(image,dtype=np.float32) / 255.0
+        im = np.array(image,dtype=np.float32)
         #im = np.array(image)# / 255.0
         
         if size is not None and offset is not None:

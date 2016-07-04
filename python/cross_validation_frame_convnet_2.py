@@ -109,9 +109,9 @@ if __name__ == "__main__":
         model = convnet.make_model_4(1,target_w,target_h,nb_filters = 20,nb_pool = 2,nb_conv = 3,nb_classes=nb_classes)
         
         score,max_value,mean_value = convnet.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch)
-        print('After training at:', i, 'Test score:', score[0], 'Test accuracy:', score[1])
+        #print('After training at:', i, 'Test score:', score[0], 'Test accuracy:', score[1])
         
-        score = convnet.test(model,max_value,mean_value,X_test,y_test,nb_classes)
+        #score = convnet.test(model,max_value,mean_value,X_test,y_test,nb_classes)
         
         print('Cross Validation result at:', i, 'Test score:', score[0], 'Test accuracy:', score[1])
 

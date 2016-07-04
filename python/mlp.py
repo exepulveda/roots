@@ -135,6 +135,6 @@ def load_model(model_filename,model_weights_filename):
     return model
 
 def save_model(model,model_filename,model_weights_filename):
-    model_string = model.to_json()
-    open(model_filename, 'w').write(model_string)
+    json_string = model.to_json()
+    open(model_filename, 'w').write(json_string)
     model.save_weights(model_weights_filename,overwrite=True)

@@ -1,0 +1,7 @@
+processing k-fold 0 training_set 6164 testing_set 1541
+
+Cross Validation result at: 0 Test score: 0.97477018106 Test accuracy: 0.822842310188
+Cross Validation result at: 1 Test score: 0.982328392831 Test accuracy: 0.796236210253
+Cross Validation result at: 2 Test score: 0.963281354217 Test accuracy: 0.809214795607
+Cross Validation result at: 3 Test score: 1.01733261103 Test accuracy: 0.78260869573
+Cross Validation result at: 4 Test score: 0.884898002081 Test accuracy: 0.829331602894
