@@ -3,8 +3,8 @@ addpath fastMBD
 %% Read images
 
 % Frame to register
-%frame=46;
-frame=14;
+frame=46;
+%frame=14;
 
 inames=dir(sprintf('frame-%d/*.jpg',frame));
 inames={inames.name};
