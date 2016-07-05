@@ -11,7 +11,7 @@ if not os.path.exists(PATH_IMAGES):
 
 cap = cv2.VideoCapture(PATH_VIDEO)
 
-i=1
+i = 1
 while cap.isOpened():
     ret, frame = cap.read()
     cv2.imwrite('{}/{}.tiff'.format(PATH_IMAGES,i), frame)
