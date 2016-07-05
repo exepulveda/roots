@@ -52,19 +52,19 @@ if __name__ == "__main__":
     ]
     images = set_cross_validation(folders)
     
-    for image,tag in images[0]:
-        print (image,tag)
+    #for image,tag in images[0]:
+    #    print (image,tag)
 
     nb_classes = 54-6+1 #49
     
-    batch_size = 50
-    nb_epoch = 1
+    batch_size = 500
+    nb_epoch = 100
     
     w = 384
     h = 288
     
-    offset_w = 0
-    offset_h = 0
+    offset_w = 10
+    offset_h = 10
     
     target_w = w // 4
     target_h = h //4
@@ -109,7 +109,7 @@ if __name__ == "__main__":
         X_test,y_test = utils.make_X_y_convnet(testing_set,w,h,offset=[offset_w,offset_h],size=[target_w,target_h]) 
         
         #model = convnet.make_model_1(3,target_w,target_h,nb_filters = 16,nb_conv = 10,nb_classes=nb_classes,dropout=0.5)
-        model = convnet.make_model_2(3,target_w,target_h,nb_classes)
+        model = convnet.make_model_3(3,target_w,target_h,nb_classes)
         
         score,max_value, mean_value = convnet.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch)
         

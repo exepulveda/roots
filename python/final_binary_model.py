@@ -31,12 +31,12 @@ def set_cross_validation(folders):
 
 if __name__ == "__main__":
     folders = [
-        "/home/a1634120/roots/training/1.11",
-        "/home/a1634120/roots/training/1.12",
-        "/home/a1634120/roots/training/1.13",
-        "/home/a1634120/roots/training/1.14",
-        "/home/a1634120/roots/training/1.15",
-        "/home/a1634120/roots/training/1.16",
+        "../training/1.11",
+        "../training/1.12",
+        "../training/1.13",
+        "../training/1.14",
+        "../training/1.15",
+        "../training/1.16",
     ]
     images = set_cross_validation(folders)
 
@@ -45,12 +45,12 @@ if __name__ == "__main__":
     input_size = 288*384
     
     h1 = 512
-    h2 = 256
+    h2 = 128
     h3 = None
     nb_classes = 2
     
-    batch_size = 100
-    nb_epoch = 150
+    batch_size = 200
+    nb_epoch = 100
     
     training_set = []
         
@@ -66,9 +66,11 @@ if __name__ == "__main__":
     print("loading images")
     print("training_set size",len(training_set))
 
-    X_train,y_train = utils.make_X_y(training_set,288,384)
+    X_train,y_train = utils.make_X_y(training_set,384,288)
         
+    print("making model")
     model = mlp.make_model(input_size,h1,h2=h2,classes=nb_classes)
-    score = mlp.train(model, X_train,None,y_train,None,nb_classes,batch_size,nb_epoch)
+    print("training model")
+    score,max_image,mean_image = mlp.train(model, X_train,None,y_train,None,nb_classes,batch_size,nb_epoch)
         
     mlp.save_model(model,"model-binary.json","model-binary.h5")        

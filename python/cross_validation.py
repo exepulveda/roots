@@ -52,12 +52,12 @@ if __name__ == "__main__":
     input_size = 288*384
     
     h1 = 512
-    h2 = 256
+    h2 = 128
     h3 = None
     nb_classes = 2
     
-    batch_size = 100
-    nb_epoch = 150
+    batch_size = 200
+    nb_epoch = 100
     
     print("batch_size",batch_size,"nb_epoch",nb_epoch)
     
@@ -90,13 +90,13 @@ if __name__ == "__main__":
         #training_set = training_set[:1000]
         #testing_set = testing_set[:500]
         
-        X_train,y_train = utils.make_X_y(training_set,288,384)
-        X_test,y_test = utils.make_X_y(testing_set,288,384) 
+        X_train,y_train = utils.make_X_y(training_set,384,288)
+        X_test,y_test = utils.make_X_y(testing_set,384,288) 
         
         model = mlp.make_model(input_size,h1,h2=h2,classes=nb_classes)
         
-        score = mlp.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch)
-        
+        score,max_value,mean_value = mlp.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch)
+        print("max_value,mean_value",max_value,mean_value) 
         print('CV,', i, ",training size,",len(training_set),",testing size,",len(testing_set),',Test score,', score[0],',Test accuracy,', score[1])
         
         mlp.save_model(model,"model-binary-cv-{0}.json".format(i),"model-binary-cv-{0}.h5".format(i))        
