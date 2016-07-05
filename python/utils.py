@@ -28,6 +28,7 @@ def load_image(image_filename,w,h,offset=None,size=None):
         #print image.shape,offset,size
         image = image[offset[1]:(offset[1] + size[1]),offset[0]:(offset[0] + size[0])]
         #print image.shape
+    image = np.swapaxes(image,0,1)
 
     X[:] = image.flatten()
 
