@@ -224,7 +224,7 @@ def test(model,max_value,mean_value,X,y,nb_classes):
 
 def load_model(model_filename,model_weights_filename):
     model = model_from_json(model_filename)
-    model.compile()
+    #model.compile()
     model.load_weights(model_weights_filename)
 
     return model

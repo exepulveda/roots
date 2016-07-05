@@ -64,8 +64,8 @@ if __name__ == "__main__":
     
     nb_classes = 54-6+1 #49
     
-    batch_size = 500
-    nb_epoch = 20
+    batch_size = 200
+    nb_epoch = 50
     
     w = 384
     h = 288

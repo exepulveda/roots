@@ -16,10 +16,10 @@ configuration.model.classifier = os.path.join(configuration.home,"models/binary.
 configuration.model.classifier_weights = os.path.join(configuration.home,"models/binary.h5")
 configuration.model.classifier_mean = 0.11
 configuration.model.classifier_max = 4.5
-configuration.model.frames = os.path.join(configuration.home,"models/model-convnet-0.json")
-configuration.model.frames_weights = os.path.join(configuration.home,"models/model-convnet-0.h5")
+configuration.model.frames = os.path.join(configuration.home,"models/final-model-convnet.json")
+configuration.model.frames_weights = os.path.join(configuration.home,"models/final-convnet.h5")
 configuration.model.frames_mean = 166.169432427  #166.166054305 max 46.4016257135
-configuration.model.frames_max = 46.3409904943 #mean 166.169432427 max 46.3409904943
+configuration.model.frames_max = 46.3409904943 #mean 166.169432427 max 46.3409904943 166.169432427 max 46.3409904943
 
 configuration.input = Dummy()
 configuration.input.image_with = 384

@@ -26,7 +26,7 @@ def load_image(image_filename,w,h,offset=None,size=None):
     if size is not None and offset is not None:
         #need to reduce image
         #print image.shape,offset,size
-        image = image[offset[0]:(offset[0] + size[0]),offset[1]:(offset[1] + size[1])]
+        image = image[offset[1]:(offset[1] + size[1]),offset[0]:(offset[0] + size[0])]
         #print image.shape
 
     X[:] = image.flatten()

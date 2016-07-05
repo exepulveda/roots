@@ -1,4 +1,9 @@
 from __future__ import print_function
+
+import theano
+
+#theano.config.mode = 'FAST_COMPILE'
+
 import utils
 import os
 import os.path
@@ -10,6 +15,7 @@ import convnet
 from config import configuration
 
 if __name__ == "__main__":
+    print("loading module")
     model = mlp.load_model(configuration.model.frames,configuration.model.frames_weights)        
 
     images_path = "../training/1.16"
@@ -48,5 +54,5 @@ if __name__ == "__main__":
         
         ret = model.predict_classes(X, batch_size=1, verbose=0)
         
-        print(image,ret,tag,X.shape)
+        if ret[0] != tag: print(image,ret[0],tag,X.shape)
         

@@ -93,7 +93,7 @@ def train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch):
     else:
         history = model.fit(X_train, Y_train,
                     batch_size=batch_size, nb_epoch=nb_epoch,
-                    verbose=0)
+                    verbose=1)
 
         return None
 

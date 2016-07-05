@@ -31,12 +31,12 @@ def set_cross_validation(folders):
 
 if __name__ == "__main__":
     folders = [
-        "/home/a1634120/roots/training/1.11",
-        "/home/a1634120/roots/training/1.12",
-        "/home/a1634120/roots/training/1.13",
-        "/home/a1634120/roots/training/1.14",
-        "/home/a1634120/roots/training/1.15",
-        "/home/a1634120/roots/training/1.16",
+        "../training/1.11",
+        "../training/1.12",
+        "../training/1.13",
+        "../training/1.14",
+        "../training/1.15",
+        "../training/1.16",
     ]
     images = set_cross_validation(folders)
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     print("loading images")
     print("training_set size",len(training_set))
 
-    X_train,y_train = utils.make_X_y(training_set,288,384)
+    X_train,y_train = utils.make_X_y(training_set,384,288)
         
     model = mlp.make_model(input_size,h1,h2=h2,classes=nb_classes)
     score = mlp.train(model, X_train,None,y_train,None,nb_classes,batch_size,nb_epoch)
