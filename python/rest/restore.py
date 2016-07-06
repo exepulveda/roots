@@ -4,7 +4,7 @@ import numpy as np
 # Restore images by aligning them and taking the median
 # at each pixel.
 
-def restore(images):
+def restore(images,iterations=50):
 
     num_of_images = len(images)
     ref_idx = num_of_images/2
@@ -19,7 +19,7 @@ def restore(images):
     warp_mode = cv2.MOTION_HOMOGRAPHY
 
     # Specify the number of iterations.
-    numOfIterations = 50;
+    numOfIterations = iterations;
 
     # Specify the threshold of the increment
     # in the correlation coefficient between two iterations
@@ -41,7 +41,7 @@ def restore(images):
             # Define 3x3 matrices and initialize the matrix to identity
             warp_matrix = np.eye(3, 3, dtype=np.float32)
 
-            print('processing...\n')
+            #print('processing...\n')
             # Run the ECC algorithm. The results are stored in warp_matrix.
             (cc, warp_matrix) = cv2.findTransformECC(fixed, moving, warp_matrix, warp_mode, criteria)
 
