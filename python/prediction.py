@@ -12,10 +12,7 @@ import random
 import json
 import numpy as np
 
-import mlp
-import convnet
 from config import configuration
-import utils
 
 ACCEPTED = 1
 REJECTED = 0

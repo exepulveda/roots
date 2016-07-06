@@ -1,14 +1,9 @@
 import csv
 import os
 import os.path
-import sklearn.cross_validation
 import numpy as np
-from sklearn import tree
-import sklearn.metrics
-import sklearn.svm
-from sklearn.ensemble import RandomForestClassifier
-import sklearn.neighbors
 from PIL import Image
+from keras.models import model_from_json
 
 def load_image(image_filename,w,h,offset=None,size=None):
     if size is not None and offset is not None:
@@ -153,3 +148,15 @@ def expand_folder(path,container):
         #    files += [filename]
         for name in files:
             container += [os.path.join(dirpath,name)]
+
+def load_model(model_filename,model_weights_filename):
+    #print("loading",model_filename,model_weights_filename)
+    model = model_from_json(open(model_filename).read())    
+    model.load_weights(model_weights_filename)
+
+    return model
+
+def save_model(model,model_filename,model_weights_filename):
+    json_string = model.to_json()
+    open(model_filename, 'w').write(json_string)
+    model.save_weights(model_weights_filename,overwrite=True)

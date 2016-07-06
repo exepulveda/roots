@@ -1,17 +1,15 @@
 from __future__ import print_function
-import utils
 import os
 import os.path
 import argparse
 import random
 import shutil
 
-import mlp
-import convnet
 from config import configuration
 import config
 from rest.video2images import extract_frames_from_video
 import prediction
+import utils
 from rest.find_best_window import select_and_restore
 
 parser = argparse.ArgumentParser(description='Process a new video')
@@ -47,8 +45,8 @@ if __name__ == "__main__":
     print("From {} frames, {} frames extracted".format(ntotal,len(image_list)))
 
     #load the models
-    binary_model = mlp.load_model(configuration.model.classifier,configuration.model.classifier_weights)        
-    window_model = mlp.load_model(configuration.model.window,configuration.model.window_weights)       
+    binary_model = utils.load_model(configuration.model.classifier,configuration.model.classifier_weights)        
+    window_model = utils.load_model(configuration.model.window,configuration.model.window_weights)       
      
     all_windows = range(configuration.window.start,configuration.window.end+1)
 
