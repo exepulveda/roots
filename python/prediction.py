@@ -24,8 +24,11 @@ def predict_accepted_rejected(image,model,configuration):
 
     binary_mean_image = configuration.model.classifier_mean
     binary_max_image = configuration.model.classifier_max
-    
-    X = utils.load_image(image,w,h,offset=[0,0],size=[w,h])
+
+    if isinstance(image, basestring):
+        X = utils.load_image(image,w,h,offset=[0,0],size=[w,h])
+    else:
+        X = image.flatten()
         
     X = (X-binary_mean_image)/binary_max_image
         
@@ -48,7 +51,11 @@ def predict_window(image,model,configuration):
     window_mean_image = configuration.model.window_mean
     window_max_image = configuration.model.window_max
         
-    X = utils.load_image_convnet(image,w,h,offset=[offset_w,offset_h],size=[target_w,target_h])
+    if isinstance(image, basestring):
+        X = utils.load_image_convnet(image,w,h,offset=[offset_w,offset_h],size=[target_w,target_h])
+    else:
+        X = np.empty((1,1,target_w,target_h))
+        X[0,0,:,:] = image[offset_w:(offset_w + target_w),offset_h:(offset_h + target_h)]        
         
     X = (X-window_mean_image)/window_max_image
         

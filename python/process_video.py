@@ -35,6 +35,7 @@ if __name__ == "__main__":
     selected_folder = os.path.join(video_folder,"selected")
 
 
+    print("STEP 1: Frames extraction...")
     image_list,ntotal = extract_frames_from_video(args.path,allframes_folder,skip=1,extension=configuration.extension)
     n = len(image_list)
     
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     #image_list = image_list[:100]
     #n = len(image_list)
     
-    print("From {} frames, {} frames extracted".format(ntotal,len(image_list)))
+    print("{} frames extracted".format(len(image_list)))
 
     #load the models
     binary_model = utils.load_model(configuration.model.classifier,configuration.model.classifier_weights)        
@@ -50,77 +51,91 @@ if __name__ == "__main__":
      
     all_windows = range(configuration.window.start,configuration.window.end+1)
 
-    frames_ok = {}
+    images_ok = {}
     for i in range(configuration.window.start,configuration.window.end+1):
-        frames_ok[i] = []
+        images_ok[i] = []
 
     #try to find each configuration.frame_step frame
+    print("STEP 2: Preliminary Classification...")
     for i in range(0,n,configuration.frame_step):
-        image = image_list[i]
-        print("processing image",i+1,image)
+        image_name = image_list[i]
+        print("processing image",i+1,image_name)
+        
+        #load the image
+        image = utils.load_image_raw(image_name)
+        
         if prediction.predict_accepted_rejected(image,binary_model,configuration) == prediction.REJECTED:
             #copy rejected file to rejected folder
-            shutil.copy(image,rejected_folder)
+            shutil.copy(image_name,rejected_folder)
         else:
             predicted_window = prediction.predict_window(image,window_model,configuration)
             #print("image ACCPETED:",image,predicted_window)
             if predicted_window in all_windows:
-                frames_ok[predicted_window] += [i]
-                shutil.copy(image,accepted_folder)
+                images_ok[predicted_window] += [(i,None)]
+                shutil.copy(image_name,accepted_folder)
 
     #maximum images in a window
     #max_images = max([len(v) for k,v in frames_ok.items()])
     #print("The maximum images of windows is:",max_images)
     #looking for windows without images
-    m = [k for k,v in frames_ok.items() if len(v) == 0]
+    m = [k for k,v in images_ok.items() if len(v) == 0]
     if len(m) > 0:
+        print("STEP 2b: Secondary Classification...")
         print("There are windows without images:",m)
         for w in m:
             #find previous frame
             starting = 0
             for k in range(w-1,configuration.window.start,-1):
-                if len(frames_ok[k]) > 0:
-                    starting = frames_ok[k][-1] + 1
+                if len(images_ok[k]) > 0:
+                    starting = images_ok[k][0][-1] + 1
                     break
 
             #find next frame
             ending = n
             for k in range(w+1,configuration.window.end,1):
-                if len(frames_ok[k]) > 0:
-                    ending = frames_ok[k][0] - 1
+                if len(images_ok[k]) > 0:
+                    ending = images_ok[k][0][0] - 1
                     break
             #now we have a bound to find a missing window
             print("trying to find window",w,"from",starting,"to",ending)
 
             for i in range(starting,ending):
-                image = image_list[i]
-                print("processing image",i+1,image)
+                image_name = image_list[i]
+                image = load_image_raw(image_name)
+                print("processing image",i+1,image_name)
                 if prediction.predict_accepted_rejected(image,binary_model,configuration) == prediction.REJECTED:
                     #print("image REJECTED:",image)
-                    shutil.copy(image,rejected_folder)
+                    shutil.copy(image_name,rejected_folder)
                 else:
                     predicted_window = prediction.predict_window(image,window_model,configuration)
                     #print("image ACCPETED:",image,predicted_window)
                     if predicted_window in m:
-                        frames_ok[predicted_window] += [i]
-                        shutil.copy(image,accepted_folder)
+                        images_ok[predicted_window] += [(i,None)]
+                        shutil.copy(image_name,accepted_folder)
 
 
 
     #select a small number of images
+    print("STEP 3: Reduce number of windows...")
     for i in range(configuration.window.start,configuration.window.end+1):
-        if len(frames_ok[i]) > configuration.max_images:
-            frames_ok[i] = random.sample(frames_ok[i], configuration.max_images)
+        if len(images_ok[i]) > configuration.max_images:
+            images_ok[i] = random.sample(images_ok[i], configuration.max_images)
 
+    print("STEP 4: Selecting/buildong best window...")
+    empty_windows = []
     for i in range(configuration.window.start,configuration.window.end+1):
-        print("{0} accepted images for window {1}".format(len(frames_ok[i]),i))
-        #apply rectification
-        image_names = [image_list[k] for k in frames_ok[i]]
-        destination = os.path.join(selected_folder,"frame-{0}.{1}".format(i,configuration.extension))
-        #copy best window image
-        select_and_restore(image_names,destination,configuration)
+        print("{0} accepted images for window {1}".format(len(images_ok[i]),i))
+        if len(images_ok[i]) > 0:
+            #apply rectification
+            images = [image_list[k[0]] for k in images_ok[i]] #0 --> index,  1--> image
+            destination = os.path.join(selected_folder,"frame-{0}.{1}".format(i,configuration.extension))
+            #copy best window image
+            select_and_restore(images,destination,configuration)
+        else:
+            empty_windows += [i]
         
 
-    for i in range(configuration.window.start,configuration.window.end+1):
-        if frames_ok[i] == 0:
-            print("WARNING: No image could be found for window {0}. Please find manually".format(i))
+    print("STEP 5: Final report...")
+    print("There are",len(images_ok) - len(empty_windows),"window selected from a total of",len(images_ok))
+    for i in empty_windows:
+        print("WARNING: No image could be found for window {0}. Please find one manually".format(i))

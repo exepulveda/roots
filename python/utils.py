@@ -5,6 +5,17 @@ import numpy as np
 from PIL import Image
 from keras.models import model_from_json
 
+import cv2
+
+
+def load_image_raw(image_filename):
+    image_color = Image.open(image_filename)
+    image = image_color.convert('L')
+    image = np.array(image,dtype=np.float32)
+    image = np.swapaxes(image,0,1)    
+
+    return image
+
 def load_image(image_filename,w,h,offset=None,size=None):
     if size is not None and offset is not None:
         final_w = size[0]

@@ -11,6 +11,7 @@ def restore(images,iterations=50):
 
     # Register images
     fixed = cv2.cvtColor(images[ref_idx],cv2.COLOR_BGR2GRAY)
+    
 
     # Find size
     sz = fixed.shape
