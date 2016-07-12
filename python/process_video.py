@@ -18,6 +18,7 @@ parser.add_argument('--tube', type=int,help='the tube number',required=True)
 parser.add_argument('--date', type=str,help='date',required=False,default="20160630")
 parser.add_argument('--time', type=str,help='time',required=False,default="070000")
 parser.add_argument('--session', type=str,help='session',required=False,default="001")
+parser.add_argument('--skip-binary', type=bool,help='skip binary classification',required=False,default=False)
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -33,6 +34,7 @@ if __name__ == "__main__":
     allframes_folder = os.path.join(video_folder,"allframes")
     accepted_folder = os.path.join(video_folder,"accepted")
     selected_folder = os.path.join(video_folder,"selected")
+    window_folder = os.path.join(video_folder,"windows")
 
 
     print("STEP 1: Frames extraction...")
@@ -65,15 +67,26 @@ if __name__ == "__main__":
         image = utils.load_image_raw(image_name)
         
         if prediction.predict_accepted_rejected(image,binary_model,configuration) == prediction.REJECTED:
+            print("image REJECTED:",image_name)
             #copy rejected file to rejected folder
             shutil.copy(image_name,rejected_folder)
         else:
-            predicted_window = prediction.predict_window(image,window_model,configuration)
-            #print("image ACCPETED:",image,predicted_window)
-            if predicted_window in all_windows:
-                images_ok[predicted_window] += [(i,None)]
-                shutil.copy(image_name,accepted_folder)
+            shutil.copy(image_name,accepted_folder)
+            predicted_window,prob = prediction.predict_window_opencv(image_name,window_model,configuration)
+            if predicted_window is None:
+                print("image could not be classify as window",image_name)
+            else:
+                print("image ACCEPTED:",image_name,"window",predicted_window,"with probability",prob)
+                if predicted_window in all_windows:
+                    images_ok[predicted_window] += [(i,None)]
+                    
+                    destination = os.path.join(window_folder,"frame-{0}".format(i,configuration.extension))
+                    if not os.path.exists(destination):
+                        os.mkdir(destination)
+                    
+                    shutil.copy(image_name,destination)
 
+    quit()
     #maximum images in a window
     #max_images = max([len(v) for k,v in frames_ok.items()])
     #print("The maximum images of windows is:",max_images)
@@ -101,7 +114,7 @@ if __name__ == "__main__":
 
             for i in range(starting,ending):
                 image_name = image_list[i]
-                image = load_image_raw(image_name)
+                image = utils.load_image_raw(image_name)
                 print("processing image",i+1,image_name)
                 if prediction.predict_accepted_rejected(image,binary_model,configuration) == prediction.REJECTED:
                     #print("image REJECTED:",image)

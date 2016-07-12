@@ -1,11 +1,8 @@
-'''Trains a simple deep NN on the MNIST dataset.
-
-Gets to 98.40% test accuracy after 20 epochs
-(there is *a lot* of margin for parameter tuning).
-2 seconds per epoch on a K520 GPU.
-'''
-
 from __future__ import print_function
+import sys
+
+sys.path += ["..","."]
+
 import utils
 import os
 import os.path
@@ -15,6 +12,7 @@ from keras.optimizers import SGD, Adam, RMSprop
 import sklearn.cross_validation
 
 import convnet
+import config
 
 def set_cross_validation(folders):
     '''Define a list with all videos. Folders contains a list of paths
@@ -52,15 +50,15 @@ if __name__ == "__main__":
         "../training/1.16",
     ]
     images = set_cross_validation(folders)
-    
-
     image_list = []
     for i,ims in enumerate(images):
         image_list += ims
         
     print ('total images',len(image_list))
+
+    from config import configuration    
     
-    nb_classes = 54-6+1 #49
+    nb_classes = configuration.window.end-configuration.window.start+1 #49
     
     batch_size = 200
     nb_epoch = 100
@@ -68,11 +66,11 @@ if __name__ == "__main__":
     w = 384
     h = 288
     
-    offset_w = 10
-    offset_h = 10
+    offset_w = configuration.window.offset_with
+    offset_h = configuration.window.offset_height
     
-    target_w = w // 4
-    target_h = h //4
+    target_w = configuration.window.image_with
+    target_h = configuration.window.image_height
 
     input_size = target_w*target_h
     
@@ -81,11 +79,11 @@ if __name__ == "__main__":
     random.shuffle(training_set)
     
     print("loading images")
-    X_train,y_train = utils.make_X_y_convnet(training_set,w,h,offset=[offset_w,offset_h],size=[target_w,target_h])
+    X_train,y_train = utils.make_X_y_convnet_opencv(training_set,offset={"w":offset_w,"h":offset_h},size={"w":target_w,"h":target_h})
     X_test,y_test = None,None
 
     print("making model")
-    model = convnet.make_model_4(1,target_w,target_h,nb_filters = 20,nb_pool = 2,nb_conv = 3,nb_classes=nb_classes)
+    model = convnet.make_model_4((3,target_h,target_w),nb_classes=nb_classes)
     
     score,max_value,mean_value = convnet.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch)
     convnet.save_model(model,"final-model-convnet.json","final-convnet.h5")       

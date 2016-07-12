@@ -86,14 +86,20 @@ if __name__ == "__main__":
 
         random.shuffle(training_set)
         random.shuffle(testing_set)
-        
-        print("loading images")
-        X_train,y_train = utils.make_X_y_convnet_opencv(training_set)
-        X_test,y_test   = utils.make_X_y_convnet_opencv(testing_set)
-            
+
         model = convnet.make_binary_model((3,h,w))
+
+        X_test,y_test   = utils.make_X_y_convnet_opencv(testing_set)
+
+        for k in xrange(0,len(training_set),batch_size):
+            batch_start = k
+            batch_end = min(k+batch_size,len(training_set))
         
-        score = convnet.train(model, X_train,X_test,y_train,y_test,1,batch_size,nb_epoch)
-        print('CV,', i, ",training size,",len(training_set),",testing size,",len(testing_set),',Test score,', score[0],',Test accuracy,', score[1])
+            X_train,y_train = utils.make_X_y_convnet_opencv(training_set[batch_start:batch_end])
         
-        convnet.save_model(model,"model-binary-cv-{0}.json".format(i),"model-binary-cv-{0}.h5".format(i))        
+            train_score = model.train_on_batch(X_train, y_train)        
+        
+            test_score = test_on_batch(X_test,y_test)
+        
+        
+        #convnet.save_model(model,"model-binary-cv-{0}.json".format(i),"model-binary-cv-{0}.h5".format(i))        

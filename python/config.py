@@ -30,10 +30,10 @@ configuration.input.image_with = 384
 configuration.input.image_height = 288
 
 configuration.window = Dummy()
-configuration.window.image_with = 96
-configuration.window.image_height = 72
-configuration.window.offset_with = 10
-configuration.window.offset_height = 10
+configuration.window.image_with = 96 #96
+configuration.window.image_height = 72 #72
+configuration.window.offset_with = 10 #10
+configuration.window.offset_height = 10 #10
 configuration.window.offset_class = 6 #classifier start in 0
 configuration.window.start = 6
 configuration.window.end = 54
@@ -73,5 +73,8 @@ def setup_video_folders(video_filname):
         os.mkdir(os.path.join(video_folder,"accepted"))
     if not os.path.exists(os.path.join(video_folder,"selected")):
         os.mkdir(os.path.join(video_folder,"selected"))
+    if not os.path.exists(os.path.join(video_folder,"windows")):
+        os.mkdir(os.path.join(video_folder,"windows"))
+
         
     return video_folder

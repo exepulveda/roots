@@ -1,3 +1,6 @@
+'''This script performs a cross validation of window classifier
+The model is a convolutional neural network with one convolutional layer and one full connected layer
+'''
 from __future__ import print_function
 
 import sys
@@ -11,8 +14,13 @@ import random
 import numpy as np
 from keras.optimizers import SGD, Adam, RMSprop
 import sklearn.cross_validation
+from keras.callbacks import Callback
+from keras.preprocessing.image import ImageDataGenerator
 
 import convnet
+import config
+
+from config import configuration
 
 def set_cross_validation(folders):
     '''Define a list with all videos. Folders contains a list of paths
@@ -39,6 +47,17 @@ def make_batches(size, batch_size):
     nb_batch = int(np.ceil(size / float(batch_size)))
     return [(i * batch_size, min(size, (i + 1) * batch_size))
             for i in range(0, nb_batch)]
+            
+class SaverCallback(Callback):
+    def __init__(self,cv_number):
+        Callback.__init__(self)
+        self.cv_number = cv_number
+        
+    def on_epoch_end(self, epoch, logs={}):
+        print("Saving model for this epoch",epoch)
+        model_filename = "mode_defs_{0}_{1}.json".format(self.cv_number,epoch)
+        model_weights_filename = "mode_weights_{0}_{1}.h5".format(self.cv_number,epoch)
+        convnet.save_model(self.model,model_filename,model_weights_filename)
 
 if __name__ == "__main__":
     folders = [
@@ -48,6 +67,7 @@ if __name__ == "__main__":
         "../training/1.14",
         "../training/1.15",
         "../training/1.16",
+        "../training/1.35",
     ]
     images = set_cross_validation(folders)
     
@@ -60,21 +80,23 @@ if __name__ == "__main__":
     
     kf = sklearn.cross_validation.KFold(len(image_list),n_folds=5,shuffle=True,random_state=1634120)
     
-    nb_classes = 54-6+1 #49
+    nb_classes = configuration.window.end-configuration.window.start+1 #49
     
-    batch_size = 200
+    batch_size = 100
     nb_epoch = 50
     
     w = 384
     h = 288
     
-    offset_w = 10
-    offset_h = 10
+    offset_w = configuration.window.offset_with
+    offset_h = configuration.window.offset_height
     
-    target_w = w // 4
-    target_h = h //4
+    target_w = configuration.window.image_with
+    target_h = configuration.window.image_height    
+    
+    #generator = ImageDataGenerator(width_shift_range=0.2,height_shift_range=0.2)
 
-    input_size = target_w*target_h
+    #input_size = target_w*target_h
     
     for i,(train_index, test_index) in enumerate(kf):
         print(train_index)
@@ -95,6 +117,8 @@ if __name__ == "__main__":
         X_train,y_train = utils.make_X_y_convnet_opencv(training_set,offset={"h":offset_h,"w":offset_w},size={"h":target_h,"w":target_w})
         X_test,y_test   = utils.make_X_y_convnet_opencv(testing_set ,offset={"h":offset_h,"w":offset_w},size={"h":target_h,"w":target_w})
 
+        modelcheckpoint = SaverCallback(i+1)
+
 
         #training_set = training_set[:5000]
         #testing_set = testing_set[:1000]
@@ -107,7 +131,7 @@ if __name__ == "__main__":
         print("making model")
         model = convnet.make_model_4((3,target_h,target_w),nb_classes=nb_classes)
         
-        score,max_value,mean_value = convnet.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch)
+        score = convnet.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch,callbacks=[modelcheckpoint],generator=None)
         #print('After training at:', i, 'Test score:', score[0], 'Test accuracy:', score[1])
         
         #score = convnet.test(model,max_value,mean_value,X_test,y_test,nb_classes)
@@ -116,7 +140,7 @@ if __name__ == "__main__":
 
 
         convnet.save_model(model,"model-convnet-{0}.json".format(i),"model-convnet-{0}.h5".format(i))       
-        print("mean",mean_value,"max",max_value)
+        #print("mean",mean_value,"max",max_value)
         
         #for epoch in range(nb_epoch):
             #print("processing epoch",epoch)

@@ -63,3 +63,42 @@ def predict_window(image,model,configuration):
         
     return ret[0] + configuration.window.start
         
+def predict_window_opencv(image,model,configuration,min_prob=0.1):
+    w = configuration.input.image_with
+    h = configuration.input.image_height
+
+    offset_w = configuration.window.offset_with
+    offset_h = configuration.window.offset_height
+        
+    target_w = configuration.window.image_with
+    target_h = configuration.window.image_height
+    
+    window_mean_image = configuration.model.window_mean
+    window_max_image = configuration.model.window_max
+        
+    if isinstance(image, basestring):
+        im = utils.load_image_opencv(image,offset={"w":offset_w,"h":offset_h},size={"w":target_w,"h":target_h})
+        im = np.array(im,dtype=np.float32) / 255.0
+        im = np.moveaxis(im,-1,0) #move channels to first axis
+
+        im = im[np.newaxis,:,:,:] #add batch channel
+
+    else:
+        im = np.empty((1,1,target_h,target_w))
+        im[0,:,:,:] = image[:,offset_h:(offset_h + target_h),offset_w:(offset_w + target_w)] / 255.0
+        
+        
+    #ret = model.predict_classes(im, batch_size=1, verbose=0)
+    
+    ret2 = model.predict_proba(im, batch_size=1, verbose=1)
+    
+    #ret2 has probabilities
+    ret = [(p,i) for i,p in enumerate(ret2[0]) if p >= min_prob]
+    
+    ret.sort()
+    
+    if len(ret) >= 1:
+        return ret[-1][1] + configuration.window.start, ret[-1][0]
+    else:
+        return None,None
+        

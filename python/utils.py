@@ -40,6 +40,16 @@ def load_image(image_filename,w,h,offset=None,size=None):
 
     return X
 
+def load_image_opencv(image_filename,offset=None,size=None):
+    image = cv2.imread(image_filename)
+    
+    #shape is (h,w,channels)
+    if size is not None and offset is not None:
+        image = image[offset["h"]:(offset["h"] + size["h"]),offset["w"]:(offset["w"] + size["w"]),:]
+    
+    return image
+
+
 def load_image_convnet(image_filename,w,h,offset=None,size=None):
     if size is not None and offset is not None:
         final_w = size[0]
@@ -109,6 +119,34 @@ def make_X_y_convnet(images,w,h,offset=None,size=None):
         #if i ==0:
         #    print im[:10,:10,0]
         
+        y[i] = tag
+
+    return X,y
+
+def make_X_y_convnet_opencv(images,offset=None,size=None):
+    n = len(images)
+    
+    X = None
+    y = None
+    
+    shape = None
+
+    #built training X and y
+    for i,(image_filename,tag) in enumerate(images):
+        #print image_filename,tag
+        image = load_image_opencv(image_filename,offset=offset,size=size)
+        #image shape is (h,w,channels) but keras needs (channel,h,w)
+        image = np.moveaxis(image,-1,0) #move channels to first axis
+        
+        if shape is None:
+            shape = image.shape
+
+            X = np.empty((n,shape[0],shape[1],shape[2]))
+            y = np.empty(n,dtype=np.int32)
+
+        image = np.array(image,dtype=np.float32) / 255.0
+        
+        X[i,:,:,:] = image[:,:,:]
         y[i] = tag
 
     return X,y
