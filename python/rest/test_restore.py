@@ -2,6 +2,7 @@ import glob, os
 from restore import *
 from winframe import *
 
+# Set input and output paths
 DATA_PATH = '../../1.11/oks'
 OUT_PATH = 'results'
 
@@ -25,7 +26,7 @@ for framename in frames:
     # Restore images from the windows frame
     restored = restore(wf)
 
-    # balance whites
+    # Balance whites
     #cv2.xphoto.balanceWhite(restored, restored, cv2.xphoto.WHITE_BALANCE_SIMPLE)
 
     # Show result

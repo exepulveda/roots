@@ -42,7 +42,6 @@ def restore(images,iterations=50):
             # Define 3x3 matrices and initialize the matrix to identity
             warp_matrix = np.eye(3, 3, dtype=np.float32)
 
-            #print('processing...\n')
             # Run the ECC algorithm. The results are stored in warp_matrix.
             (cc, warp_matrix) = cv2.findTransformECC(fixed, moving, warp_matrix, warp_mode, criteria)
 
