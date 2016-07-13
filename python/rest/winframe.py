@@ -25,9 +25,9 @@ def win_dist(images):
     return d
 
 
-def winframe (images):
+def winframe(images, win_sz=7):
     # Find the windows frame with the lesser error
-    win_sz = 7
+
     n = len(images)
 
     if win_sz <= n:

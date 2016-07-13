@@ -12,13 +12,6 @@ def extract_frames_from_video(video_path,frames_path,skip=1):
 
     cap = cv2.VideoCapture(video_path)
 
-<<<<<<< HEAD
-i = 1
-while cap.isOpened():
-    ret, frame = cap.read()
-    cv2.imwrite('{}/{}.tiff'.format(PATH_IMAGES,i), frame)
-    i += 1
-=======
     image_list = []
     i=1
     k=1
@@ -30,7 +23,6 @@ while cap.isOpened():
             image_list += [image_filename]
             k += 1
         i += 1
->>>>>>> 4f60fc13355b66af4f741a6bd0060f21f6000222
 
     cap.release()
     return image_list
