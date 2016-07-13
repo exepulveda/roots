@@ -11,6 +11,7 @@ import os.path
 import random
 import json
 import numpy as np
+import cv2
 
 from config import configuration
 
@@ -22,17 +23,31 @@ def predict_accepted_rejected(image,model,configuration):
     w = configuration.input.image_with
     h = configuration.input.image_height
 
-    binary_mean_image = configuration.model.classifier_mean
-    binary_max_image = configuration.model.classifier_max
+    #binary_mean_image = configuration.model.classifier_mean
+    #binary_max_image = configuration.model.classifier_max
 
     if isinstance(image, basestring):
+        
         X = utils.load_image(image,w,h,offset=[0,0],size=[w,h])
+        
+        
+        if shape is None:
+            shape = image.shape
+
+            X = np.empty((n,shape[0],shape[1],shape[2]))
+            y = np.empty(n,dtype=np.int32)
+
+        image = np.array(image,dtype=np.float32) / 255.0
+        
+        X[i,:,:,:] = image[:,:,:]        
     else:
-        X = image.flatten()
+        #image is a raw image opened with opencv
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)        
+        X = gray_image[np.newaxis,np.newaxis,:,:]
         
-    X = (X-binary_mean_image)/binary_max_image
+    #X = (X-binary_mean_image)/binary_max_image
         
-    X = X[np.newaxis,:]
+    #X = X[np.newaxis,:]
 
     ret = model.predict_classes(X, batch_size=1, verbose=0)
     
@@ -73,8 +88,8 @@ def predict_window_opencv(image,model,configuration,min_prob=0.1):
     target_w = configuration.window.image_with
     target_h = configuration.window.image_height
     
-    window_mean_image = configuration.model.window_mean
-    window_max_image = configuration.model.window_max
+    #window_mean_image = configuration.model.window_mean
+    #window_max_image = configuration.model.window_max
         
     if isinstance(image, basestring):
         im = utils.load_image_opencv(image,offset={"w":offset_w,"h":offset_h},size={"w":target_w,"h":target_h})
