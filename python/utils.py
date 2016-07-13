@@ -1,14 +1,20 @@
 import csv
 import os
 import os.path
-import sklearn.cross_validation
 import numpy as np
-from sklearn import tree
-import sklearn.metrics
-import sklearn.svm
-from sklearn.ensemble import RandomForestClassifier
-import sklearn.neighbors
 from PIL import Image
+from keras.models import model_from_json
+
+import cv2
+
+
+def load_image_raw(image_filename):
+    image_color = Image.open(image_filename)
+    image = image_color.convert('L')
+    image = np.array(image,dtype=np.float32)
+    image = np.swapaxes(image,0,1)    
+
+    return image
 
 def load_image(image_filename,w,h,offset=None,size=None):
     if size is not None and offset is not None:
@@ -33,6 +39,16 @@ def load_image(image_filename,w,h,offset=None,size=None):
     X[:] = image.flatten()
 
     return X
+
+def load_image_opencv(image_filename,offset=None,size=None):
+    image = cv2.imread(image_filename)
+    
+    #shape is (h,w,channels)
+    if size is not None and offset is not None:
+        image = image[offset["h"]:(offset["h"] + size["h"]),offset["w"]:(offset["w"] + size["w"]),:]
+    
+    return image
+
 
 def load_image_convnet(image_filename,w,h,offset=None,size=None):
     if size is not None and offset is not None:
@@ -107,6 +123,34 @@ def make_X_y_convnet(images,w,h,offset=None,size=None):
 
     return X,y
 
+def make_X_y_convnet_opencv(images,offset=None,size=None):
+    n = len(images)
+    
+    X = None
+    y = None
+    
+    shape = None
+
+    #built training X and y
+    for i,(image_filename,tag) in enumerate(images):
+        #print image_filename,tag
+        image = load_image_opencv(image_filename,offset=offset,size=size)
+        #image shape is (h,w,channels) but keras needs (channel,h,w)
+        image = np.moveaxis(image,-1,0) #move channels to first axis
+        
+        if shape is None:
+            shape = image.shape
+
+            X = np.empty((n,shape[0],shape[1],shape[2]))
+            y = np.empty(n,dtype=np.int32)
+
+        image = np.array(image,dtype=np.float32) / 255.0
+        
+        X[i,:,:,:] = image[:,:,:]
+        y[i] = tag
+
+    return X,y
+
 
 def make_X_y(images,w,h,offset=None,size=None,all_channes=False):
     n = len(images)
@@ -153,3 +197,15 @@ def expand_folder(path,container):
         #    files += [filename]
         for name in files:
             container += [os.path.join(dirpath,name)]
+
+def load_model(model_filename,model_weights_filename):
+    #print("loading",model_filename,model_weights_filename)
+    model = model_from_json(open(model_filename).read())    
+    model.load_weights(model_weights_filename)
+
+    return model
+
+def save_model(model,model_filename,model_weights_filename):
+    json_string = model.to_json()
+    open(model_filename, 'w').write(json_string)
+    model.save_weights(model_weights_filename,overwrite=True)

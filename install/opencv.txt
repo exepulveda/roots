@@ -1,0 +1,30 @@
+http://www.pyimagesearch.com/2015/06/22/install-opencv-3-0-and-python-2-7-on-ubuntu/
+
+cmake -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+	-D INSTALL_C_EXAMPLES=OFF \
+	-D INSTALL_PYTHON_EXAMPLES=ON \
+	-D OPENCV_EXTRA_MODULES_PATH=~/installing/opencv_contrib/modules \
+	-D BUILD_EXAMPLES=ON \
+    -D WITH_MATLAB=OFF \
+    -D WITH_IPP=OFF -D WITH_CUDA=OFF -D WITH_GSTREAMER=OFF \
+    -D BUILD_opencv_python2=ON \
+    -D PYTHON2_EXECUTABLE=/usr/local/bin/python2.7 \
+    -D PYTHON2_INCLUDE_DIR=/usr/local/include/python2.7 \
+    -D PYTHON2_LIBRARY=/usr/lib/python2.7/config-x86_64-linux-gnu/libpython2.7.so \
+    -D PYTHON2_NUMPY_INCLUDE_DIRS=/usr/local/lib/python2.7/dist-packages/numpy/core/include/ \
+    -D PYTHON2_PACKAGES_PATH=/usr/local/lib/python2.7/dist-packages \
+     ..
+
+
+    -D PYTHON2_EXECUTABLE=/usr/local/bin/python2.7 \
+    -D PYTHON2_INCLUDE_DIR=/usr/local/include/python2.7 \
+    -D PYTHON2_LIBRARY=/usr/local/lib/libpython2.7.a \
+    -D PYTHON2_NUMPY_INCLUDE_DIRS=/usr/local/lib/python2.7/dist-packages/numpy/core/include/ \
+    -D PYTHON2_PACKAGES_PATH=/usr/local/lib/python2.7/dist-packages \
+
+    -D PYTHON2_PACKAGES_PATH=/usr/local/lib/python2.7/site-packages \
+    -D BUILD_NEW_PYTHON_SUPPORT=ON \
+
+/usr/local/lib/python2.7/dist-packages
+/usr/local/lib/python2.7/dist-packages/PyBrain-0.3.1-py2.7.egg', '/usr/local/lib/python2.7/dist-packages/fann2-1.0.0-py2.7-linux-x86_64.egg', '/usr/local/lib/python2.7/dist-packages/Pyevolve-0.6rc1-py2.7.egg', '/home/esepulveda/pylearn2', '/usr/local/lib/python2.7/dist-packages/PyYAML-3.11-py2.7-linux-x86_64.egg', '/usr/local/lib/python2.7/dist-packages/singledispatch-3.4.0.3-py2.7.egg', '/usr/local/lib/python2.7/dist-packages/Keras-1.0.5-py2.7.egg', '/usr/lib/python2.7', '/usr/lib/python2.7/plat-x86_64-linux-gnu', '/usr/lib/python2.7/lib-tk', '/usr/lib/python2.7/lib-old', '/usr/lib/python2.7/lib-dynload', '/usr/local/lib/python2.7/dist-packages', '/usr/local/lib/python2.7/dist-packages/PIL', '/usr/lib/python2.7/dist-packages', '/usr/lib/python2.7/dist-packages/PILcompat', '/usr/lib/python2.7/dist-packages/gtk-2.0', '/usr/lib/pymodules/python2.7', '/usr/lib/python2.7/dist-packages/ubuntu-sso-client', '/usr/lib/python2.7/dist-packages/wx-2.8-gtk2-unicode']

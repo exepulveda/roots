@@ -4,13 +4,14 @@ import numpy as np
 # Restore images by aligning them and taking the median
 # at each pixel.
 
-def restore(images):
+def restore(images,iterations=50):
 
     num_of_images = len(images)
     ref_idx = num_of_images/2
 
     # Register images
     fixed = cv2.cvtColor(images[ref_idx],cv2.COLOR_BGR2GRAY)
+    
 
     # Find size
     sz = fixed.shape
@@ -19,7 +20,7 @@ def restore(images):
     warp_mode = cv2.MOTION_HOMOGRAPHY
 
     # Specify the number of iterations.
-    numOfIterations = 50;
+    numOfIterations = iterations;
 
     # Specify the threshold of the increment
     # in the correlation coefficient between two iterations
