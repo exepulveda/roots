@@ -16,14 +16,19 @@ configuration.extension = "tiff"
 
 
 configuration.model = Dummy()
-configuration.model.classifier = os.path.join(configuration.home,"models/model-binary.json") 
+configuration.model.classifiers = {
+    'final': os.path.join(configuration.home,"models/model-binary"),
+    'cv-0' : os.path.join(configuration.home,"models/model-binary-cv-0"),
+    'window-final': os.path.join(configuration.home,"models/model-window"),
+    }
+configuration.model.classifier = configuration.model.classifiers['cv-0']
+
 configuration.model.classifier_weights = os.path.join(configuration.home,"models/model-binary.h5")
 configuration.model.classifier_mean = 127.367759008 #mean_value 
 configuration.model.classifier_max = 43.5644119735
-configuration.model.window = os.path.join(configuration.home,"models/model-window.json")
-configuration.model.window_weights = os.path.join(configuration.home,"models/model-window.h5")
-configuration.model.window_mean = 166.169432427  #166.166054305 max 46.4016257135
-configuration.model.window_max = 46.3409904943 #mean 166.169432427 max 46.3409904943 166.169432427 max 46.3409904943
+configuration.model.window = configuration.model.classifiers['window-final']
+#configuration.model.window_mean = 166.169432427  #166.166054305 max 46.4016257135
+#configuration.model.window_max = 46.3409904943 #mean 166.169432427 max 46.3409904943 166.169432427 max 46.3409904943
 
 configuration.input = Dummy()
 configuration.input.image_with = 384
@@ -77,4 +82,8 @@ def setup_video_folders(video_filname):
         os.mkdir(os.path.join(video_folder,"windows"))
 
         
+    return video_folder
+
+def get_video_folder(video_name):
+    video_folder = os.path.join(configuration.home,"processing",video_name)
     return video_folder
