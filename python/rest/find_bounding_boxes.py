@@ -46,7 +46,7 @@ def find_bounding_boxes(img,exp_size,tol=.25):
         if (1-tol)*ew < w < (1+tol)*2*ew and (1-tol)*eh < h < (1+tol)*eh:
 
             if w< (1+tol)*ew:
-                print "w,h ",w,h
+                #print "w,h ",w,h
                 boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w, h))
             else: #2 numbers
                 boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w/2, h))
@@ -58,15 +58,18 @@ def find_bounding_boxes(img,exp_size,tol=.25):
 
 
 if __name__ == "__main__":
-    filename = '1197.tiff'
-
-    img = cv2.imread(filename)
+    filename = '/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-11/3.tiff'
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-6/182.tiff"
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-6/805.tiff"
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/accepted/1204.tiff"
+    img = cv2.imread(x)
 
     expected_size=(20,30)# (w,h)
     boundings = find_bounding_boxes(img, expected_size,.25);
 
     for b in boundings:
         x,y,w,h = b
+        print b
         cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 1)
 
     cv2.imshow('res', img)

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import os.path
+from rest.find_bounding_boxes import find_bounding_boxes
 
 from matplotlib import pyplot as plt
 
@@ -16,63 +17,82 @@ def load_templates(configuration):
         
     return ret
 
-SUBIMAGE_X = 10
-SUBIMAGE_Y = 10
-SUBIMAGE_W = 100
-SUBIMAGE_H = 100    
-    
-def find_bounding_boxes(img,exp_size,tol=0.25):
-    # convert to grayscale
-    gray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
-
-    # crop
-    gray = gray[SUBIMAGE_X:SUBIMAGE_W,SUBIMAGE_Y:SUBIMAGE_H]
-
-    # remove noise
-    gray = cv2.medianBlur(gray,5)
-
-    # sharp
-    blur = cv2.GaussianBlur(gray,(0,0),5)
-    gray = cv2.addWeighted(gray, 3.5,blur,-2.5,0)
-
-    #cv2.imshow('gray', gray)
-
-    # Find threshold
-    hist = cv2.calcHist([gray], [0], None, [256], [0, 256])
-    hist2 = hist/np.sum(hist)
-    th = np.where(np.cumsum(hist2) >= .9)[0][0]
-
-    ret, thresh = cv2.threshold(gray, th-1, 256, cv2.THRESH_BINARY_INV);
-
-    kernel = cv2.getStructuringElement(cv2.MORPH_ERODE,(5,5))
-    thresh = cv2.erode(thresh,kernel,1)
-
-
-    # Find the contours
-    contours = cv2.findContours(thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[1]
-    boundings = []
-
-    ew, eh = exp_size
-
-    for cnt in contours:
-        x,y,w,h = cv2.boundingRect(cnt)
-        if (1-tol)*ew < w < (1+tol)*2*ew and (1-tol)*eh < h < (1+tol)*eh:
-
-            if w< (1+tol)*ew:
-                #print "w,h ",w,h
-                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w, h))
-            else: #2 numbers
-                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w/2, h))
-
-                x += w/2
-                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w / 2, h))
-
-    return boundings
-
+  
 def find_zone(im):
-    return 0,0,im.shape[0],im.shape[1]
+    expected_size=(20,30)
+    boundings = find_bounding_boxes(im, expected_size,.25)
+    if len(boundings) > 0:
+        x1,y1,w1,h1 = boundings[0]
+        x2,y2,w2,h2 = boundings[1]
+        
+        #cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 1)        
+        
+        return min(y1,y2),min(x1,y2),max(y1 + h1,y2 + h2),max(x1 + w1,x2 + w2)
+    else:
+        return 0,0,im.shape[0],im.shape[1]
+    
     
 def classify_image(image,templates,threshold=0.4,debug=False):
+    im = cv2.imread(image)
+    #im = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+    #first try to select a smaller rectangle where to find
+    #mode_image = np.mean(im)
+    expected_size=(20,30)
+    boundings = find_bounding_boxes(im, expected_size,.25)
+    
+    digits = []
+    
+    for b in boundings:
+        x,y,w,h = b
+        if debug:
+            print w,h
+        #cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 1)    
+    
+        if h < 30:
+            h = 30
+        if w < 20:
+            w = 20
+    
+        im1 = im[y:y+h,x:x+w]
+        matches = []
+        for digit,template in templates.iteritems():
+            try:
+                res = cv2.matchTemplate(im1,template,cv2.TM_CCOEFF_NORMED)
+                min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+
+                if debug:
+                    print digit,max_val,max_loc,threshold
+
+                if max_val > threshold:
+                    #we have found one element
+                    matches += [(max_val,digit,x)]
+            except:
+                print "OPECV ERROR:",digit,template.shape,im1.shape,image
+                quit()
+
+        n_matches = len(matches)
+        #print "n_matches",n_matches
+        if n_matches > 0:
+            #select the best one
+            matches.sort()
+            first_match = matches[-1]
+            #delete that part
+            max_val,digit,x = first_match
+            
+            digits += [(digit,x)]
+    
+    if len(digits) == 1:
+        return digits[0][0]
+    elif len(digits) == 2:
+        if digits[0][1] < digits[1][1]:
+            number = digits[0][0] * 10 + digits[1][0]
+        else:
+            number = digits[1][0] * 10 + digits[0][0]
+        return number
+    else:
+        return None
+
+def classify_image_2(image,templates,threshold=0.4,debug=False):
     im = cv2.imread(image)
     #im = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
     #first try to select a smaller rectangle where to find
@@ -110,7 +130,7 @@ def classify_image(image,templates,threshold=0.4,debug=False):
         #delete that part
         max_val,digit,max_loc,h,w = first_match
         if debug:
-            print digit,max_loc
+            print digit,max_loc,h,w
         im2 = np.copy(im)
         im2[max_loc[1]:max_loc[1] + h,max_loc[0]:max_loc[0] + w] = 0#mode_image
         
@@ -159,13 +179,23 @@ def classify_image(image,templates,threshold=0.4,debug=False):
         
     return number
 
-
 if __name__ == "__main__":
     x = "/home/esepulveda/Documents/projects/roots/training/1.14/oks/frame-23/01213.jpg"
     x = "/home/esepulveda/Documents/projects/roots/training/1.14/oks/frame-53/03421.jpg"
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-6/805.tiff"
+    #x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-6/182.tiff"
+
     img = cv2.imread(x)
-    boundings = find_bounding_boxes(img,(20,40))
+
+    #boundings = find_bounding_boxes(img,(20,30))
+    #print boundings
+
+    templates = load_templates(configuration)
+
+    print classify_image(x,templates,threshold=0.4,debug=True) 
     
+    
+    quit()
     
     
     for b in boundings:
@@ -177,8 +207,6 @@ if __name__ == "__main__":
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    quit()
-    templates = load_templates(configuration)
 
     
     #check accuracy

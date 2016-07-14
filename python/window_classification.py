@@ -41,6 +41,8 @@ if __name__ == "__main__":
     
     accepted_folder = os.path.join(video_folder,"accepted")
     window_folder = os.path.join(video_folder,"windows")
+    
+    #deleting window_folder
 
     logging.info("STEP 1: Loading accepted videos...")
     
@@ -57,12 +59,18 @@ if __name__ == "__main__":
     
     #window_model = utils.load_model(configuration.model.window + ".json",configuration.model.window + ".h5")
 
-    #all_windows = range(configuration.window.start,configuration.window.end+1)
-    all_windows = [6,10,11,12,13,15,20,21,22,23,25,30,31,32,33,35,40,41,42,43,45,50,51,52,52]
+    all_windows = range(configuration.window.start,configuration.window.end+1)
+    #all_windows = [6,10,11,12,13,15,20,21,22,23,25,30,31,32,33,35,40,41,42,43,45,50,51,52,52]
     images_ok = {}
     for i in all_windows:
         images_ok[i] = []
 
+    #deleting window_folder
+    if os.path.exists(window_folder):
+        shutil.rmtree(window_folder)
+        
+    os.mkdir(window_folder)
+        
     rejected = 0
     accepted = 0
     for i,image_name in enumerate(image_list):
