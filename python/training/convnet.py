@@ -150,7 +150,7 @@ def make_model_1(channels,img_width,img_height,nb_filters = 20,nb_pool = 2,nb_co
     
     return model
 
-def make_model_4(input_shape,nb_classes,dropout=0.5):
+def make_window_model(input_shape,nb_classes,dropout=0.5):
     model = Sequential()
     
     # first convolutional layer

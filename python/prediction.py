@@ -105,7 +105,7 @@ def predict_window_opencv(image,model,configuration,min_prob=0.1):
         
     #ret = model.predict_classes(im, batch_size=1, verbose=0)
     
-    ret2 = model.predict_proba(im, batch_size=1, verbose=1)
+    ret2 = model.predict_proba(im, batch_size=1, verbose=0)
     
     #ret2 has probabilities
     ret = [(p,i) for i,p in enumerate(ret2[0]) if p >= min_prob]

@@ -12,6 +12,7 @@ from rest.video2images import extract_frames_from_video
 import prediction
 import utils
 from rest.find_best_window import select_and_restore
+import classify_template_matching
 
 parser = argparse.ArgumentParser(description='Performe window classifiacion')
 parser.add_argument('--video', type=str,help='the video binary results path',required=True)
@@ -50,10 +51,14 @@ if __name__ == "__main__":
     logging.info("Using {} accepted images".format(n))
 
     logging.info("STEP 2: Window classification...")
-    window_model = utils.load_model(configuration.model.window + ".json",configuration.model.window + ".h5")
+    
+    #loading templates
+    templates = classify_template_matching.load_templates(configuration)
+    
+    #window_model = utils.load_model(configuration.model.window + ".json",configuration.model.window + ".h5")
 
-    all_windows = range(configuration.window.start,configuration.window.end+1)
-
+    #all_windows = range(configuration.window.start,configuration.window.end+1)
+    all_windows = [6,10,11,12,13,15,20,21,22,23,25,30,31,32,33,35,40,41,42,43,45,50,51,52,52]
     images_ok = {}
     for i in all_windows:
         images_ok[i] = []
@@ -61,17 +66,19 @@ if __name__ == "__main__":
     rejected = 0
     accepted = 0
     for i,image_name in enumerate(image_list):
-        logging.debug("processing image",i+1,image_name)
-        
-        predicted_window,prob = prediction.predict_window_opencv(image_name,window_model,configuration)
+        logging.debug("processing image[{}]: {}".format(i+1,image_name))
+    
+        predicted_window = classify_template_matching.classify_image(image_name,templates)
+        prob = 1.0
+        #predicted_window,prob = prediction.predict_window_opencv(image_name,window_model,configuration)
         if predicted_window is None:
-            logging.debug("image could not be classify as window",image_name)
+            logging.debug("image could not be classify as window {}".format(image_name))
         else:
-            logging.debug("image ACCEPTED:",image_name,"window",predicted_window,"with probability",prob)
+            logging.debug("image with window: {}. window={} with probability={}".format(image_name,predicted_window,prob))
             if predicted_window in all_windows:
                 images_ok[predicted_window] += [i]
                 
-                destination = os.path.join(window_folder,"frame-{0}".format(i,configuration.extension))
+                destination = os.path.join(window_folder,"frame-{0}".format(predicted_window))
                 if not os.path.exists(destination):
                     os.mkdir(destination)
                 
@@ -80,4 +87,4 @@ if __name__ == "__main__":
     logging.info("STEP 3: report...")
     for i in all_windows:
         if len(images_ok[i]) == 0:
-            logging.info("No images detected for window {0}".format(len(images_ok[i])))
+            logging.info("No images detected for window {0}".format(i))

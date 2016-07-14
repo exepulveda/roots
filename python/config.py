@@ -20,13 +20,15 @@ configuration.model.classifiers = {
     'final': os.path.join(configuration.home,"models/model-binary"),
     'cv-0' : os.path.join(configuration.home,"models/model-binary-cv-0"),
     'window-final': os.path.join(configuration.home,"models/model-window"),
+    'window-cv-0': os.path.join(configuration.home,"models/model-convnet-0"),
     }
 configuration.model.classifier = configuration.model.classifiers['cv-0']
 
 configuration.model.classifier_weights = os.path.join(configuration.home,"models/model-binary.h5")
 configuration.model.classifier_mean = 127.367759008 #mean_value 
 configuration.model.classifier_max = 43.5644119735
-configuration.model.window = configuration.model.classifiers['window-final']
+configuration.model.window = configuration.model.classifiers['window-cv-0']
+configuration.model.window_templates = os.path.join(configuration.home,"models/templates")
 #configuration.model.window_mean = 166.169432427  #166.166054305 max 46.4016257135
 #configuration.model.window_max = 46.3409904943 #mean 166.169432427 max 46.3409904943 166.169432427 max 46.3409904943
 
