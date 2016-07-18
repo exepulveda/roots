@@ -32,7 +32,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO)
 
 
-    logging.info("Processing video:",args.video)
+    logging.info("Processing video:%s",args.video)
 
     video_folder = config.get_video_folder(args.video)
 
@@ -57,7 +57,8 @@ if __name__ == "__main__":
     #loading templates
     templates = classify_template_matching.load_templates(configuration)
     
-    #window_model = utils.load_model(configuration.model.window + ".json",configuration.model.window + ".h5")
+    #loading window CNN model
+    window_model = utils.load_model(configuration.model.window + ".json",configuration.model.window + ".h5")
 
     all_windows = range(configuration.window.start,configuration.window.end+1)
     #all_windows = [6,10,11,12,13,15,20,21,22,23,25,30,31,32,33,35,40,41,42,43,45,50,51,52,52]
@@ -77,12 +78,22 @@ if __name__ == "__main__":
         logging.debug("processing image[{}]: {}".format(i+1,image_name))
     
         predicted_window = classify_template_matching.classify_image(image_name,templates)
-        prob = 1.0
-        #predicted_window,prob = prediction.predict_window_opencv(image_name,window_model,configuration)
         if predicted_window is None:
-            logging.debug("image could not be classify as window {}".format(image_name))
+            logging.debug("image could not be classify as window {} trying to perforn secondaly classification".format(image_name))
+
+            predicted_window,prob = prediction.predict_window_opencv(image_name,window_model,configuration)
+            if predicted_window in all_windows:
+                images_ok[predicted_window] += [i]
+                
+                destination = os.path.join(window_folder,"frame-{0}".format(predicted_window))
+                if not os.path.exists(destination):
+                    os.mkdir(destination)
+                
+                shutil.copy(image_name,destination)
+            
+
         else:
-            logging.debug("image with window: {}. window={} with probability={}".format(image_name,predicted_window,prob))
+            logging.debug("image with window: {}. window={}".format(image_name,predicted_window))
             if predicted_window in all_windows:
                 images_ok[predicted_window] += [i]
                 

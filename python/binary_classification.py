@@ -34,7 +34,7 @@ if __name__ == "__main__":
     if not os.path.exists(args.video):
         raise Exception("Video does not exist")
 
-    logging.info("Processing video:",args.video)
+    logging.info("Processing video: %s",args.video)
 
 
     video_folder = config.setup_video_folders(args.video)
@@ -58,19 +58,19 @@ if __name__ == "__main__":
     accepted = 0
     for i in range(0,n,configuration.frame_step):
         image_name = image_list[i]
-        logging.debug("processing image",i+1,image_name)
+        logging.debug("processing image[%d]:%s",i+1,image_name)
         
         #load the image
         image = utils.load_image_opencv(image_name)
         
         if prediction.predict_accepted_rejected(image,binary_model,configuration) == prediction.REJECTED:
-            logging.debug("image REJECTED:",image_name)
+            logging.debug("image REJECTED: %s",image_name)
             rejected += 1
             #copy rejected file to rejected folder
             shutil.copy(image_name,rejected_folder)
         else:
             accepted += 1
-            logging.debug("image ACCEPTED:",image_name)
+            logging.debug("image ACCEPTED: %s",image_name)
             shutil.copy(image_name,accepted_folder)
 
     logging.info("STEP 3: report...")
