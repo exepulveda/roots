@@ -22,7 +22,7 @@ def find_bounding_boxes(img,exp_size,tol=.25):
     blur = cv2.GaussianBlur(gray,(0,0),5)
     gray = cv2.addWeighted(gray, 3.5,blur,-2.5,0)
 
-    #cv2.imshow('gray', gray)
+    cv2.imshow('gray', gray)
 
     # Find threshold
     hist = cv2.calcHist([gray], [0], None, [256], [0, 256])
@@ -33,6 +33,9 @@ def find_bounding_boxes(img,exp_size,tol=.25):
 
     kernel = cv2.getStructuringElement(cv2.MORPH_ERODE,(5,5))
     thresh = cv2.erode(thresh,kernel,1)
+
+    cv2.imshow('thresh', thresh)
+
 
 
     # Find the contours
@@ -49,19 +52,22 @@ def find_bounding_boxes(img,exp_size,tol=.25):
                 #print "w,h ",w,h
                 boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w, h))
             else: #2 numbers
-                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w/2, h))
+                overlap = 3
+                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w/2 + overlap, h))
 
-                x += w/2
-                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w / 2, h))
+                x += w/2 -overlap
+                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w/2 + overlap, h))
 
     return boundings
 
 
 if __name__ == "__main__":
-    filename = '/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-11/3.tiff'
+    #filename = '/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-11/3.tiff'
     x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-6/182.tiff"
     x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-6/805.tiff"
     x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/accepted/1204.tiff"
+    x = "/Users/a1613915/repos/roots/python/rest/1369.tiff"
+
     img = cv2.imread(x)
 
     expected_size=(20,30)# (w,h)
