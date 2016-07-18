@@ -7,7 +7,7 @@ SUBIMAGE_W = 100
 SUBIMAGE_H = 100
 
 
-def find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9):
+def find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9,overlap=3):
     '''this function try to find the box around numbers to limit the template matching
     '''
 
@@ -55,7 +55,6 @@ def find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9):
                 #print "w,h ",w,h
                 boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w, h))
             else: #2 numbers
-                overlap = 3
                 boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w/2 + overlap, h))
 
                 x += w/2 -overlap
