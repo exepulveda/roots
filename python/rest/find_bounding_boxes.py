@@ -24,7 +24,7 @@ def find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9):
     blur = cv2.GaussianBlur(gray,(0,0),5)
     gray = cv2.addWeighted(gray, 3.5,blur,-2.5,0)
 
-    cv2.imshow('gray', gray)
+    #cv2.imshow('gray', gray)
 
     # Find threshold
     hist = cv2.calcHist([gray], [0], None, [256], [0, 256])
@@ -36,7 +36,7 @@ def find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9):
     kernel = cv2.getStructuringElement(cv2.MORPH_ERODE,(5,5))
     thresh = cv2.erode(thresh,kernel,1)
 
-    cv2.imshow('thresh', thresh)
+    #cv2.imshow('thresh', thresh)
 
 
 
