@@ -32,7 +32,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO)
 
 
-    logging.info("Processing video:",args.video)
+    logging.info("Processing video:%s",args.video)
 
     video_folder = config.get_video_folder(args.video)
 

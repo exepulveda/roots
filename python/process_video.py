@@ -1,4 +1,8 @@
 from __future__ import print_function
+'''this script is deprecated
+use instead binary_classification.py and window_classification.py
+'''
+
 import os
 import os.path
 import argparse
@@ -19,6 +23,8 @@ parser.add_argument('--date', type=str,help='date',required=False,default="20160
 parser.add_argument('--time', type=str,help='time',required=False,default="070000")
 parser.add_argument('--session', type=str,help='session',required=False,default="001")
 parser.add_argument('--skip-binary', type=bool,help='skip binary classification',required=False,default=False)
+
+
 
 if __name__ == "__main__":
     args = parser.parse_args()

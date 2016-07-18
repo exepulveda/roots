@@ -32,14 +32,16 @@ def find_zone(im):
         return 0,0,im.shape[0],im.shape[1]
     
     
-def classify_image(image,templates,threshold=0.4,debug=False):
+def classify_image(image,templates,threshold=0.2,debug=False):
     im = cv2.imread(image)
     #im = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
     #first try to select a smaller rectangle where to find
     #mode_image = np.mean(im)
     expected_size=(20,30)
-    boundings = find_bounding_boxes(im, expected_size,.25)
-    
+    boundings = find_bounding_boxes(im, expected_size,tol=.25,histogram_th=0.95)
+    if len(boundings) == 0:
+        boundings = find_bounding_boxes(im, expected_size,tol=.25,histogram_th=0.90)    
+        
     digits = []
     
     for b in boundings:
@@ -53,7 +55,13 @@ def classify_image(image,templates,threshold=0.4,debug=False):
         if w < 20:
             w = 20
     
-        im1 = im[y:y+h,x:x+w]
+        #adjusting crop
+        yc = y#-2
+        hc = h#+2
+        xc = x#-2
+        wc = w#+2
+    
+        im1 = im[yc:y+hc,xc:x+wc]
         matches = []
         for digit,template in templates.iteritems():
             try:
@@ -184,15 +192,18 @@ if __name__ == "__main__":
     x = "/home/esepulveda/Documents/projects/roots/training/1.14/oks/frame-53/03421.jpg"
     x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-6/805.tiff"
     #x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-6/182.tiff"
-
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-6/952.tiff"
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-14/1540.tiff"
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-17/79.tiff" #6
     img = cv2.imread(x)
 
-    #boundings = find_bounding_boxes(img,(20,30))
-    #print boundings
+    boundings = find_bounding_boxes(img,(20,30))
+    print boundings
 
     templates = load_templates(configuration)
 
-    print classify_image(x,templates,threshold=0.4,debug=True) 
+    img = cv2.imread(x)
+    print classify_image(x,templates,threshold=0.2,debug=True) 
     
     
     quit()
