@@ -1,5 +1,6 @@
 import os.path
 import shutil
+import json
 
 PROJECT_HOME = "."
 
@@ -13,7 +14,7 @@ configuration.tmp_dir = "/tmp"
 configuration.max_images = 100
 configuration.frame_step = 1 #how many frames are skipped from video
 configuration.extension = "tiff"
-
+configuration.batch_size = 1000
 
 configuration.model = Dummy()
 configuration.model.classifiers = {
@@ -26,13 +27,10 @@ configuration.model.classifiers = {
 configuration.model.classifier = configuration.model.classifiers['cv-0']
 
 configuration.model.classifier_weights = os.path.join(configuration.home,"models/model-binary.h5")
-configuration.model.classifier_mean = 127.367759008 #mean_value 
-configuration.model.classifier_max = 43.5644119735
+
 configuration.model.window = configuration.model.classifiers['window-cv-5']
 configuration.model.window_templates = os.path.join(configuration.home,"models/templates")
-configuration.model.min_probability = 0.80
-#configuration.model.window_mean = 166.169432427  #166.166054305 max 46.4016257135
-#configuration.model.window_max = 46.3409904943 #mean 166.169432427 max 46.3409904943 166.169432427 max 46.3409904943
+configuration.model.min_probability = 0.50
 
 configuration.input = Dummy()
 configuration.input.image_width = 384
@@ -90,6 +88,25 @@ def setup_video_folders(video_filname,reset_folder=True):
 
         
     return video_folder
+
+def save_video_status(video_filename,status):
+    status_filename = os.path.join(video_filename,"status.txt")
+
+    with open(status_filename,"w") as fout:
+        json.dump(status,fout)
+
+def load_video_status(video_filename):
+    try:
+        status_filename = os.path.join(video_filename,"status.txt")
+        
+        if os.path.exists(status_filename):
+            with open(status_filename,"r") as fin:
+                obj = json.load(fin)
+                return obj
+        else:
+            return json.loads("{}")
+    except:
+        return json.loads("{}")
 
 def get_video_folder(video_name):
     video_folder = os.path.join(configuration.home,"processing",video_name)

@@ -18,6 +18,10 @@ from config import configuration
 ACCEPTED = 1
 REJECTED = 0
 
+def predict_accepted_rejected_batch(image_batch,model,configuration):
+    ret = model.predict_classes(image_batch, batch_size=len(image_batch), verbose=0)
+    
+    return ret
 
 def predict_accepted_rejected(image,model,configuration):
     w = configuration.input.image_width
@@ -116,3 +120,22 @@ def predict_window_opencv(image,model,configuration,min_prob=0.1):
     else:
         return None,None
         
+def predict_window_opencv_batch(images,model,configuration):
+    n = len(images)
+    predictions = model.predict_proba(images, batch_size=n, verbose=0)
+    
+    #result is (n,2)
+    predicted_window = np.empty(n,dtype=np.int32)
+    predicted_propability = np.empty(n)
+    
+    for k in xrange(len(images)):
+        ret2 = predictions[k]
+        
+        ret = [(p,i) for i,p in enumerate(ret2)]
+        
+        ret.sort()
+    
+        predicted_window[k] = ret[-1][1] + configuration.window.start
+        predicted_propability[k] = ret[-1][0]
+
+    return predicted_window,predicted_propability
