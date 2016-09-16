@@ -12,7 +12,7 @@ np.random.seed(1337)  # for reproducibility
 from keras.datasets import mnist
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.optimizers import SGD, Adam, RMSprop, Adagrad
+from keras.optimizers import SGD, Adam, RMSprop, Adagrad, Adadelta
 from keras.utils import np_utils
 from keras.models import model_from_json
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
@@ -154,17 +154,17 @@ def make_window_model(input_shape,nb_classes,dropout=0.5):
     model = Sequential()
     
     # first convolutional layer
-    model.add(Convolution2D(16,4,4,border_mode='same',input_shape=input_shape))
+    model.add(Convolution2D(16,5,5,border_mode='same',input_shape=input_shape))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
 
-    #model.add(Convolution2D(32,4,4,border_mode='same'))
-    #model.add(Activation('relu'))
-    #model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Convolution2D(32,4,4,border_mode='same'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
 
     model.add(Flatten())
 
-    model.add(Dense(50))
+    model.add(Dense(100))
     model.add(Activation('relu'))
     model.add(Dropout(dropout))
 
@@ -175,7 +175,7 @@ def make_window_model(input_shape,nb_classes,dropout=0.5):
 
 
     # setting sgd optimizer parameters
-    optimizer = Adagrad()
+    optimizer = Adadelta() #Adagrad()
     model.compile(loss='categorical_crossentropy', optimizer=optimizer,metrics=['accuracy'])
     
     return model
@@ -187,17 +187,17 @@ def make_binary_model(input_shape,dropout=0.25):
     model.add(Convolution2D(16,4,4,border_mode='same',input_shape=input_shape))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(dropout))
+    #model.add(Dropout(dropout))
 
     model.add(Convolution2D(32,4,4,border_mode='same'))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Dropout(dropout))
 
-    model.add(Convolution2D(32,4,4,border_mode='same'))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(dropout))
+    #model.add(Convolution2D(32,4,4,border_mode='same'))
+    #model.add(Activation('relu'))
+    #model.add(MaxPooling2D(pool_size=(2,2)))
+    #model.add(Dropout(dropout))
 
     model.add(Flatten())
 
@@ -212,10 +212,53 @@ def make_binary_model(input_shape,dropout=0.25):
 
 
     # setting sgd optimizer parameters
-    optimizer = Adagrad()
+    optimizer = Adadelta() #Adagrad()
     model.compile(loss='binary_crossentropy', optimizer=optimizer,metrics=['accuracy'])
     
     return model    
+
+def make_binary_model_full(input_shape,dropout=0.25,activation='sigmoid'):
+    model = Sequential()
+    
+    # first convolutional layer
+    #model.add(Convolution2D(16,4,4,border_mode='same',input_shape=input_shape))
+    #model.add(Activation('relu'))
+    #model.add(MaxPooling2D(pool_size=(2,2)))
+    #model.add(Dropout(dropout))
+
+    #model.add(Convolution2D(32,4,4,border_mode='same'))
+    #model.add(Activation('relu'))
+    #model.add(MaxPooling2D(pool_size=(2,2)))
+    #model.add(Dropout(dropout))
+
+    #model.add(Convolution2D(32,4,4,border_mode='same'))
+    #model.add(Activation('relu'))
+    #model.add(MaxPooling2D(pool_size=(2,2)))
+    #model.add(Dropout(dropout))
+
+    h1 = 100
+    h2 = 50
+
+    model.add(Flatten(input_shape=input_shape))
+    model.add(Dense(h1,init='lecun_uniform',activation=activation))
+    model.add(Dropout(dropout))
+
+    if h2 is not None:
+        model.add(Dense(h2,init='lecun_uniform',activation=activation))
+        model.add(Dropout(dropout))
+    
+    model.add(Dense(1,activation='sigmoid',init='lecun_uniform'))
+
+    model.summary()
+
+    # setting sgd optimizer parameters
+    optimizer = Adadelta() #Adagrad()
+    model.compile(loss='binary_crossentropy',optimizer=optimizer,metrics=['accuracy'])
+
+    #model.compile(loss='binary_crossentropy', optimizer=optimizer,metrics=['accuracy'])
+    
+    return model    
+
 
 def train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch,callbacks=[],generator=None):
     #X_train = X_train.astype('float32')

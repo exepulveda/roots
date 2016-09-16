@@ -20,7 +20,7 @@ REJECTED = 0
 
 
 def predict_accepted_rejected(image,model,configuration):
-    w = configuration.input.image_with
+    w = configuration.input.image_width
     h = configuration.input.image_height
 
     #binary_mean_image = configuration.model.classifier_mean
@@ -29,7 +29,6 @@ def predict_accepted_rejected(image,model,configuration):
     if isinstance(image, basestring):
         
         X = utils.load_image(image,w,h,offset=[0,0],size=[w,h])
-        
         
         if shape is None:
             shape = image.shape
@@ -42,8 +41,8 @@ def predict_accepted_rejected(image,model,configuration):
         X[i,:,:,:] = image[:,:,:]        
     else:
         #image is a raw image opened with opencv
-        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)        
-        X = gray_image[np.newaxis,np.newaxis,:,:]
+        #gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)        
+        X = image #gray_image[np.newaxis,np.newaxis,:,:]
         
     #X = (X-binary_mean_image)/binary_max_image
         
@@ -54,13 +53,13 @@ def predict_accepted_rejected(image,model,configuration):
     return ret[0]
 
 def predict_window(image,model,configuration):
-    w = configuration.input.image_with
+    w = configuration.input.image_width
     h = configuration.input.image_height
 
-    offset_w = configuration.window.offset_with
+    offset_w = configuration.window.offset_width
     offset_h = configuration.window.offset_height
         
-    target_w = configuration.window.image_with
+    target_w = configuration.window.image_width
     target_h = configuration.window.image_height
     
     window_mean_image = configuration.model.window_mean
@@ -79,13 +78,13 @@ def predict_window(image,model,configuration):
     return ret[0] + configuration.window.start
         
 def predict_window_opencv(image,model,configuration,min_prob=0.1):
-    w = configuration.input.image_with
+    w = configuration.input.image_width
     h = configuration.input.image_height
 
-    offset_w = configuration.window.offset_with
+    offset_w = configuration.window.offset_width
     offset_h = configuration.window.offset_height
         
-    target_w = configuration.window.image_with
+    target_w = configuration.window.image_width
     target_h = configuration.window.image_height
     
     #window_mean_image = configuration.model.window_mean

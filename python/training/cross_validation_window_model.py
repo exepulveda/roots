@@ -33,7 +33,7 @@ def set_cross_validation(folders):
         for i in range(6,55):
             #making folder name
             filenames = []
-            utils.expand_folder(os.path.join(images_path,"oks","frame-{0}".format(i)),filenames)
+            utils.expand_folder(os.path.join(images_path,"windows","frame-{0}".format(i)),filenames)
             oks_filenames += [(x,i-6) for x in filenames]
             
         
@@ -61,13 +61,20 @@ class SaverCallback(Callback):
 
 if __name__ == "__main__":
     folders = [
-        "../training/1.11",
-        "../training/1.12",
-        "../training/1.13",
-        "../training/1.14",
-        "../training/1.15",
-        "../training/1.16",
-        "../training/1.35",
+        '/media/esepulveda/Elements/4-training/1.11',
+        '/media/esepulveda/Elements/4-training/1.12',
+        '/media/esepulveda/Elements/4-training/1.13',
+        '/media/esepulveda/Elements/4-training/1.14',
+        '/media/esepulveda/Elements/4-training/1.15',
+        '/media/esepulveda/Elements/4-training/1.16',
+        '/media/esepulveda/Elements/4-training/1.33',
+        '/media/esepulveda/Elements/4-training/1.33-2',
+        '/media/esepulveda/Elements/4-training/1.33-3',
+        '/media/esepulveda/Elements/4-training/1.33-4',
+        '/media/esepulveda/Elements/4-training/1.33-5',
+        '/media/esepulveda/Elements/4-training/1.33-6',
+        '/media/esepulveda/Elements/4-training/1.33-7',
+        '/media/esepulveda/Elements/4-training/1.35',   
     ]
     images = set_cross_validation(folders)
     
@@ -88,10 +95,10 @@ if __name__ == "__main__":
     w = 384
     h = 288
     
-    offset_w = configuration.window.offset_with
+    offset_w = configuration.window.offset_width
     offset_h = configuration.window.offset_height
     
-    target_w = configuration.window.image_with
+    target_w = configuration.window.image_width
     target_h = configuration.window.image_height    
     
     #generator = ImageDataGenerator(width_shift_range=0.2,height_shift_range=0.2)
@@ -99,8 +106,8 @@ if __name__ == "__main__":
     #input_size = target_w*target_h
     
     for i,(train_index, test_index) in enumerate(kf):
-        print(train_index)
-        print(test_index)
+        #print(train_index)
+        #print(test_index)
         training_set = [image_list[x] for x in train_index]
         testing_set = [image_list[x] for x in test_index]
     
@@ -129,7 +136,7 @@ if __name__ == "__main__":
         
         #model = convnet.make_model_1(3,target_w,target_h,nb_filters = 16,nb_conv = 10,nb_classes=nb_classes,dropout=0.5)
         print("making model")
-        model = convnet.make_model_4((3,target_h,target_w),nb_classes=nb_classes)
+        model = convnet.make_window_model((3,target_h,target_w),nb_classes=nb_classes)
         
         score = convnet.train(model, X_train,X_test,y_train,y_test,nb_classes,batch_size,nb_epoch,callbacks=[modelcheckpoint],generator=None)
         #print('After training at:', i, 'Test score:', score[0], 'Test accuracy:', score[1])
