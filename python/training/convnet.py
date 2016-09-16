@@ -187,17 +187,11 @@ def make_binary_model(input_shape,dropout=0.25):
     model.add(Convolution2D(16,4,4,border_mode='same',input_shape=input_shape))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    #model.add(Dropout(dropout))
 
     model.add(Convolution2D(32,4,4,border_mode='same'))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Dropout(dropout))
-
-    #model.add(Convolution2D(32,4,4,border_mode='same'))
-    #model.add(Activation('relu'))
-    #model.add(MaxPooling2D(pool_size=(2,2)))
-    #model.add(Dropout(dropout))
 
     model.add(Flatten())
 
@@ -211,7 +205,6 @@ def make_binary_model(input_shape,dropout=0.25):
     model.summary()    
 
 
-    # setting sgd optimizer parameters
     optimizer = Adadelta() #Adagrad()
     model.compile(loss='binary_crossentropy', optimizer=optimizer,metrics=['accuracy'])
     

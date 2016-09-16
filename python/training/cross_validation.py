@@ -36,8 +36,6 @@ def set_cross_validation(folders):
     return images
 
 if __name__ == "__main__":
-    '''
-    '''
     training_folder = '/home/a1634120/data/roots/'
     
     folders = [
@@ -71,12 +69,6 @@ if __name__ == "__main__":
     
     tw = ow/4
     th = oh/4
-    
-    #h1 = 512
-    #h2 = 128
-    #h3 = None
-    #nb_classes = 2
-    
     batch_size = 100
     nb_epoch = 100
     
@@ -91,11 +83,6 @@ if __name__ == "__main__":
         training_set = [image_list[x] for x in train_index]
         testing_set = [image_list[x] for x in test_index]
 
-        #quick test
-        #training_set = training_set[:5000]
-        #testing_set = testing_set[:1000]
-
-    
         print("processing k-fold",i,'training_set',len(training_set),'testing_set',len(testing_set))
         
         #first god/bad classifier
@@ -111,8 +98,6 @@ if __name__ == "__main__":
         X_test,y_test   = utils.make_X_y_convnet_opencv(testing_set,target_size=(tw,th))
             
         model = convnet.make_binary_model_full((3,th,tw))
-        #model = convnet.make_binary_model((3,th,tw))
-        #quit() 
         score = convnet.train(model, X_train,X_test,y_train,y_test,1,batch_size,nb_epoch)
         print('CV,', i, ",training size,",len(training_set),",testing size,",len(testing_set),',Test score,', score[0],',Test accuracy,', score[1])
         

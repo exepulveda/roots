@@ -1,0 +1,10 @@
+open("C:\\Users\\bonadm20\\Desktop\\New Folder\\Input\\1.12.AVI");
+run("Reduce...", "reduction=15");
+run("Image Sequence... ", "format=TIFF name=1.12- start=001 save=[C:\\Users\\bonadm20\\Desktop\\New Folder\\Output\\1.12-0001.tif]");
+run("Close");
+
+
+open("/home/esepulveda/Documents/projects/roots/1.16.AVI");
+run("Reduce...", "reduction=15");
+run("Image Sequence... ", "format=JPEG name=1.12- start=001 save=[/home/esepulveda/Documents/projects/roots/1.16/1.16-0001.jpg]");
+run("Close");
