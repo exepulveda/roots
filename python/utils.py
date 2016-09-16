@@ -139,7 +139,6 @@ def make_X_y_convnet_opencv(images,offset=None,size=None,target_size=None):
         if target_size is not None:
             image = cv2.resize(image,target_size) 
         
-        #target_size=None
         #image shape is (h,w,channels) but keras needs (channel,h,w)
         image = np.moveaxis(image,-1,0) #move channels to first axis
         

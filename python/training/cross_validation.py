@@ -38,42 +38,40 @@ def set_cross_validation(folders):
 if __name__ == "__main__":
     '''
     '''
+
+    training_folder = '/media/esepulveda/Elements/4-training'
     
     folders = [
-        '/media/esepulveda/Elements/4-training/1.11',
-        '/media/esepulveda/Elements/4-training/1.12',
-        '/media/esepulveda/Elements/4-training/1.13',
-        '/media/esepulveda/Elements/4-training/1.14',
-        '/media/esepulveda/Elements/4-training/1.15',
-        '/media/esepulveda/Elements/4-training/1.16',
-        '/media/esepulveda/Elements/4-training/1.33',
-        '/media/esepulveda/Elements/4-training/1.33-2',
-        '/media/esepulveda/Elements/4-training/1.33-3',
-        '/media/esepulveda/Elements/4-training/1.33-4',
-        '/media/esepulveda/Elements/4-training/1.33-5',
-        '/media/esepulveda/Elements/4-training/1.33-6',
-        '/media/esepulveda/Elements/4-training/1.33-7',
-        '/media/esepulveda/Elements/4-training/1.35',   
-    ]
-    images = set_cross_validation(folders)
+        '1.11',
+        '1.12',
+        '1.13',
+        '1.14',
+        '1.15',
+        '1.16',
+        '1.33',
+        '1.33-2',
+        '1.33-3',
+        '1.33-4',
+        '1.33-5',
+        '1.33-6',
+        '1.33-7',
+        '1.35',   
+        ]
 
+    images = set_cross_validation([os.path.join(training_folder,x) for x in folders])
 
     image_list = []
     for i,ims in enumerate(images):
         image_list += ims
         
+    print("total number of images:",len(image_list) )
     #input_size = 288*384
     ow = 384
     oh = 288
     
-    tw = 100
-    th = 100
-    
-    #h1 = 512
-    #h2 = 128
-    #h3 = None
-    #nb_classes = 2
-    
+    tw = ow/4
+    th = oh/4
+
     batch_size = 100
     nb_epoch = 100
     
@@ -88,11 +86,6 @@ if __name__ == "__main__":
         training_set = [image_list[x] for x in train_index]
         testing_set = [image_list[x] for x in test_index]
 
-        #quick test
-        training_set = training_set[:5000]
-        testing_set = testing_set[:1000]
-
-    
         print("processing k-fold",i,'training_set',len(training_set),'testing_set',len(testing_set))
         
         #first god/bad classifier
@@ -108,8 +101,6 @@ if __name__ == "__main__":
         X_test,y_test   = utils.make_X_y_convnet_opencv(testing_set,target_size=(th,tw))
             
         model = convnet.make_binary_model_full((3,th,tw))
-        #model = convnet.make_binary_model((3,th,tw))
-        
         score = convnet.train(model, X_train,X_test,y_train,y_test,1,batch_size,nb_epoch)
         print('CV,', i, ",training size,",len(training_set),",testing size,",len(testing_set),',Test score,', score[0],',Test accuracy,', score[1])
         

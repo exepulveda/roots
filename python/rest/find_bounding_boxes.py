@@ -7,7 +7,7 @@ SUBIMAGE_W = 100
 SUBIMAGE_H = 100
 
 
-def find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9):
+def find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9,overlap=3):
     '''this function try to find the box around numbers to limit the template matching
     '''
 
@@ -36,6 +36,7 @@ def find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9):
     kernel = cv2.getStructuringElement(cv2.MORPH_ERODE,(5,5))
     thresh = cv2.erode(thresh,kernel,1)
 
+    #cv2.imshow('thresh', thresh)
 
     # Find the contours
     contours = cv2.findContours(thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[1]
@@ -52,10 +53,10 @@ def find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9):
                 #print "w,h ",w,h
                 boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w, h))
             else: #2 numbers
-                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w/2, h))
+                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w/2 + overlap, h))
 
-                x += w/2
-                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w / 2, h))
+                x += w/2 -overlap
+                boundings.append((SUBIMAGE_X+x, SUBIMAGE_Y+y, w/2 + overlap, h))
 
     return boundings
 
