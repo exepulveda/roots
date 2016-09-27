@@ -1,15 +1,14 @@
 import os.path
+import os
 import shutil
 import json
-
-PROJECT_HOME = "."
 
 class Dummy():
     pass
 
 configuration = Dummy()
 
-configuration.home = PROJECT_HOME
+configuration.home = os.environ['PROJECT_HOME']
 configuration.tmp_dir = "/tmp"
 configuration.max_images = 100
 configuration.frame_step = 1 #how many frames are skipped from video
@@ -17,20 +16,12 @@ configuration.extension = "tiff"
 configuration.batch_size = 1000
 
 configuration.model = Dummy()
-configuration.model.classifiers = {
-    'final': os.path.join(configuration.home,"models/model-binary"),
-    'cv-0' : os.path.join(configuration.home,"models/model-binary-cv-0"),
-    'window-final': os.path.join(configuration.home,"models/model-window"),
-    'window-cv-0': os.path.join(configuration.home,"models/model-convnet-0"),
-    'window-cv-5': os.path.join(configuration.home,"models/model_window_cv_5_49"),
-    }
-configuration.model.classifier = configuration.model.classifiers['cv-0']
+configuration.model.home = os.environ['MODEL_HOME']
 
-configuration.model.classifier_weights = os.path.join(configuration.home,"models/model-binary.h5")
-
-configuration.model.window = configuration.model.classifiers['window-cv-5']
-configuration.model.window_templates = os.path.join(configuration.home,"models/templates")
-configuration.model.min_probability = 0.50
+configuration.model.classifier = os.path.join( configuration.model.home, 'model_binary')
+configuration.model.window     = os.path.join( configuration.model.home, 'model_window')
+configuration.model.window_templates = os.path.join(configuration.model.home,"templates")
+configuration.model.min_probability = 0.90
 
 configuration.input = Dummy()
 configuration.input.image_width = 384
