@@ -8,7 +8,7 @@ class Dummy():
 
 configuration = Dummy()
 
-configuration.home = os.environ['PROJECT_HOME']
+configuration.home = os.environ.get('PROJECT_HOME','.')
 configuration.tmp_dir = "/tmp"
 configuration.max_images = 100
 configuration.frame_step = 1 #how many frames are skipped from video
@@ -16,7 +16,7 @@ configuration.extension = "tiff"
 configuration.batch_size = 1000
 
 configuration.model = Dummy()
-configuration.model.home = os.environ['MODEL_HOME']
+configuration.model.home = os.environ.get('MODEL_HOME','models')
 
 configuration.model.classifier = os.path.join( configuration.model.home, 'model_binary')
 configuration.model.window     = os.path.join( configuration.model.home, 'model_window')
