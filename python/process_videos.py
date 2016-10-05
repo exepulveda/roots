@@ -174,57 +174,60 @@ def window_classification(video,video_status,configuration):
             predicted_window_1 = np.empty(n,dtype=np.int32)
             prob = np.empty(n)
 
-            for i in range(batches):
-                starting = i*batch_size
-                ending = min(starting+batch_size,n)
+            #for i in range(batches):
+            #    starting = i*batch_size
+            #    ending = min(starting+batch_size,n)
 
-                images_batch = np.empty((ending-starting,3,configuration.input.binary_height,configuration.input.binary_width))
+            #    images_batch = np.empty((ending-starting,3,configuration.input.binary_height,configuration.input.binary_width))
 
-                #print (i,starting,ending)
+            #   #print (i,starting,ending)
             
-                for k in range(starting,ending):
-                    #load the image
-                    image_name = image_list[k]
+            #    for k in range(starting,ending):
+            #        #load the image
+            #        image_name = image_list[k]
                     
-                    im = utils.load_image_opencv(image_name,offset={"w":offset_w,"h":offset_h},size={"w":target_w,"h":target_h})
-                    im = np.array(im,dtype=np.float32) / 255.0
-                    im = np.moveaxis(im,-1,0) #move channels to first axis
+            #        im = utils.load_image_opencv(image_name,offset={"w":offset_w,"h":offset_h},size={"w":target_w,"h":target_h})
+            #        im = np.array(im,dtype=np.float32) / 255.0
+            #        im = np.moveaxis(im,-1,0) #move channels to first axis
 
-                    im = im[np.newaxis,:,:,:] #add batch channel
+            #        im = im[np.newaxis,:,:,:] #add batch channel
                         
-                    images_batch[k-starting,:,:,:] = im
+            #        images_batch[k-starting,:,:,:] = im
 
-                predicted_window_1_batch,prob_batch = prediction.predict_window_opencv_batch(images_batch,window_model,configuration)
+            #    predicted_window_1_batch,prob_batch = prediction.predict_window_opencv_batch(images_batch,window_model,configuration)
 
-                predicted_window_1[starting:ending] = predicted_window_1_batch
-                prob[starting:ending] = prob_batch
+            #    predicted_window_1[starting:ending] = predicted_window_1_batch
+            #    prob[starting:ending] = prob_batch
 
             #MT
             for k,image_name in enumerate(image_list):
-                predicted_window_2 = classify_template_matching.classify_image(image_name,templates)
+                try:
+                    predicted_window_2 = classify_template_matching.classify_image(image_name,templates,debug=False)
 
-                if predicted_window_1[k] == predicted_window_2:
-                    #both methods predict the same, trust
-                    predicted_window = predicted_window_1[k]
-                    ok_2 += 1
-                else:
-                    if prob[k] > configuration.model.min_probability or predicted_window_2 is None:
-                        #if 70% of classifier or not classification using matching, trust on classifier
-                        predicted_window = predicted_window_1[k]
-                        ok_cnn += 1
-                    else:
+                    #if predicted_window_1[k] == predicted_window_2:
+                        #both methods predict the same, trust
+                    #    predicted_window = predicted_window_1[k]
+                    #    ok_2 += 1
+                    #else:
+                        #if prob[k] > configuration.model.min_probability or predicted_window_2 is None:
+                        #    #if 70% of classifier or not classification using matching, trust on classifier
+                        #    predicted_window = predicted_window_1[k]
+                        #    ok_cnn += 1
+                        #else:
                         #trust on matching
-                        predicted_window = predicted_window_2
-                        ok_mt += 1
+                    predicted_window = predicted_window_2
+                    ok_mt += 1
 
-                if predicted_window in all_windows:
-                    images_ok[predicted_window] += [image_name]
-                    
-                    destination = os.path.join(window_folder,"frame-{0}".format(predicted_window))
-                    if not os.path.exists(destination):
-                        os.mkdir(destination)
-                    
-                    shutil.copy(image_name,destination)
+                    if predicted_window in all_windows:
+                        images_ok[predicted_window] += [image_name]
+                        
+                        destination = os.path.join(window_folder,"frame-{0}".format(predicted_window))
+                        if not os.path.exists(destination):
+                            os.mkdir(destination)
+                        
+                        shutil.copy(image_name,destination)
+                except:
+                    print("error: ",image_name)
 
             logging.info("STEP 3: report...")
             logging.info("STEP 3: window classification by CNN only: [%d]",ok_cnn)

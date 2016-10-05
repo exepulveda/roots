@@ -61,9 +61,6 @@ if __name__ == "__main__":
     for i,ims in enumerate(images):
         image_list += ims
         
-    #load binary_classifier
-    binary_model = utils.load_model(configuration.model.classifier + ".json",configuration.model.classifier + ".h5")
-
         
     target_size = (configuration.input.binary_width,configuration.input.binary_height)
 

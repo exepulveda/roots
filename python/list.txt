@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 /home/esepulveda/Dropbox/ap-es-projects/input_vm/1.24.AVI 
+=======
+/Users/exequiel/Dropbox/ap-es-projects/input_vm/2.42.AVI
+>>>>>>> 706eac8f054648a190c0458354cc9244efaa0396
