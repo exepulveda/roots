@@ -12,8 +12,11 @@ import sklearn.cross_validation
 from config import configuration
 
 from skimage import data
+from scipy.ndimage import gaussian_filter
+
 from bound import load_templates
-from bound import predict
+from bound import best_box
+
 
 def set_cross_validation(folders):
     '''Define a list with all videos. Folders contains a list of paths
@@ -57,6 +60,7 @@ if __name__ == "__main__":
 
     templates = load_templates(configuration.model.window_templates)
 
+    debug=False
     
     for folder in folders:
         if os.path.exists(folder):
@@ -67,29 +71,15 @@ if __name__ == "__main__":
             for i,ims in enumerate(images):
                 image_list += ims
                 
-            fn = 0
-            fp = 0
-            tn = 0
-            tp = 0
-
-            debug=False
-
             for image_name,tag in image_list:
                 if debug: print (image_name,os.path.exists(image_name))
-                pred = predict(image_name,templates,debug=False)
-                
-                #print (tag,pred,image_name)
-                if pred == tag:
-                    tp += 1 #rejected but was rejected --> true positive
-                else:
-                    fp += 1
-                    if debug: print("BAD:",image_name,tag,pred)
 
-            n = len(image_list)
-            
-            if n>0:
-                print("total images:",n,(float(tp)/n) * 100,folder)
-            else:
-                print("total images:",n)
-                
-            
+                image = data.imread(image_name)
+                image = image[10:80,10:80]
+                image = gaussian_filter(image, 1)
+
+
+                box = best_box(image,debug=debug)
+                if box:
+                    x, y, w, h = box
+                    print(tag,",",w,",",h)

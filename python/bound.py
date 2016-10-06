@@ -12,14 +12,17 @@ from skimage.filters import threshold_yen
 from skimage.filters import threshold_li
 from skimage.filters import threshold_isodata
 
+import cv2
+
 
 MIN_WIDTH = 8
 MAX_WITH  = 40
 MIN_HEIGHT = 17
 MAX_HEIGHT = 28
 MIN_AREA   = 200
-MAX_AREA   = 900
-TWO_DIGIT_LIMIT   = 31
+MAX_AREA   = 1000
+ONE_DIGIT_LIMIT = 25
+TWO_DIGITS_LIMIT   = 32
 
 def load_templates(path):
 	ret = [None]*10
@@ -86,7 +89,7 @@ def get_bounding_box(boxes,min_a,max_a,debug=False,max_distance=25.0):
     else:
         return boxes[0]
 
-def limit_bounding_box(boxes,limit=TWO_DIGIT_LIMIT,debug=False):
+def limit_bounding_box(boxes,limit,debug=False):
 	above_limit = []
 	under_limit = []
 	for bb in boxes:
@@ -108,7 +111,7 @@ def get_target_bounding_box(box,tw,th):
 	
 	return max(0,int(xm - tw/2.0)),max(0,int(ym - th/2.0)),tw,th
 	
-def best_box(image,global_thresh=None,steps=20,limit=TWO_DIGIT_LIMIT,debug=False):
+def best_box(image,global_thresh=None,steps=20,one_digit_limit=ONE_DIGIT_LIMIT,two_digits_limit=TWO_DIGITS_LIMIT,debug=False):
     ret = []
     gray = rgb2gray(image)
     if global_thresh is None:
@@ -119,8 +122,8 @@ def best_box(image,global_thresh=None,steps=20,limit=TWO_DIGIT_LIMIT,debug=False
         #global_thresh = threshold_otsu(gray)
         #global_thresh = threshold_yen(gray)
         
-        
-    for t in np.linspace(global_thresh,1.0,steps):
+    ret = {}
+    for t in np.linspace(global_thresh,0.95,steps):
         if debug: print "best_box:t:",t
         binary_global = gray > t
 
@@ -136,18 +139,32 @@ def best_box(image,global_thresh=None,steps=20,limit=TWO_DIGIT_LIMIT,debug=False
             bb = get_bounding_box(valid_boxes,MIN_AREA,MAX_AREA,debug=debug)
             
             x, y, w, h = bb
+                      
+            if w <= one_digit_limit:
+                digit_case = "a"
+            elif w >= two_digits_limit:
+                digit_case = "b"
+            else:
+                digit_case = "c"
+
+            if debug: print "best_box:valid_boxes:",x,y,w,h,digit_case
+
+
+            if digit_case not in ret:
+                ret[digit_case] = []
             
-            if debug: print "best_box:valid_boxes:",x,y,w,h
-            ret += [(w>limit,w*h,bb)]
-            
-    ret.sort()
-    if debug: print ret
+            ret[digit_case] += [(w*h,bb)]
+
     if len(ret) > 0:
-        return ret[-1][2]
+        ret2 = {}
+        for k,v in ret.iteritems():
+            v.sort()
+            ret2[k] = v[-1][1]
+        return ret2
     else:
-        return None
-	
-def get_all_boxes(image,global_thresh=None,steps=20,limit=TWO_DIGIT_LIMIT,debug=False):
+        return {}
+
+def get_all_boxes(image,global_thresh=None,steps=20,limit=TWO_DIGITS_LIMIT,debug=False):
     ret = []
     gray = rgb2gray(image)
     if global_thresh is None:
@@ -201,8 +218,10 @@ def match_digit(image,templates,min_w=24,is_two_digits=True,debug=False):
     if is_two_digits:
         #first digit should be: 1,2,3,4,5
         ret = []
+        
+        wlimit = max(w/2,min_w)
         for digit in [1,2,3,4,5]:
-            result = match_template(image[:,:w/2], templates[digit])
+            result = match_template(image[:,:wlimit], templates[digit])
             max_correl = np.max(result)
             ret += [(max_correl,digit)]
             if debug: print "digit1:",digit,max_correl
@@ -217,7 +236,7 @@ def match_digit(image,templates,min_w=24,is_two_digits=True,debug=False):
         digits = range(0,10) if digit1 != 5 else [0,1,2,3,4]
         ret = []
         for digit in digits:
-            result = match_template(image[:,w - w/2:], templates[digit])
+            result = match_template(image[:,w - wlimit:], templates[digit])
             max_correl = np.max(result)
             ret += [(max_correl,digit)]
             if debug: print "digit2:",digit,max_correl
@@ -302,50 +321,107 @@ def predict_mode(image_name,templates,tw=44,th=28,min_w=24,debug=False):
         return stats.mode(predictions,axis=None).mode[0]
     else:
         return None
+        
+def prediction_box(image,templates,bb,tw,th,is_two_digits,min_w=24,debug=False,image_name=None):
+    tb = get_target_bounding_box(bb,tw,th)
+    
+    if debug: print "target box",tb,"is_two_digits",is_two_digits
+
+    x, y, w, h = tb
+    x1 = x
+    x2 = x + w - max(tw/2,min_w)
+    w1 = max(tw/2,min_w)
+    w2 = max(tw/2,min_w)
+
+    selection = image[y:y+h,x:x+w]
+    selection = rgb2gray(selection)
+    try:
+        prediction = match_digit(selection,templates,min_w=min_w,is_two_digits=is_two_digits,debug=debug)
+    except Exception as e:
+        print "problem with image",image_name,e
+    
+    if is_two_digits and prediction[0] is not None and prediction[1] is not None:
+        window = prediction[0][1] * 10 + prediction[1][1]
+        correl = max(prediction[0][0],prediction[1][0]) 
+    elif not is_two_digits and prediction[0] is not None:
+        correl,window = prediction[0]
+    else:
+        correl = None
+        window = None
+
+    return (window,correl)
+    
 
 def predict(image_name,templates,tw=44,th=28,min_w=24,debug=False):
-    image = data.imread(image_name)
+    #image = data.imread(image_name)
+    #
+    image = cv2.imread(image_name)
     image = image[10:80,10:80]
     image = gaussian_filter(image, 1)
     
     
-    bb = best_box(image,limit=TWO_DIGIT_LIMIT,debug=debug)
+    bboxes = best_box(image,debug=debug)
     
-    if bb is None:
+    if bboxes and len(bboxes) == 0: return None
+    
+    best_prediction = None
+    best_corr = None
+    
+    predictions = {}
+    for k,bb in bboxes.iteritems():
+        if k == "a": #one_digit
+            #tw = 44
+            #tw = 36             
+            tw = 32
+            prediction,corr = prediction_box(image,templates,bb,tw,th,False,min_w=min_w,debug=debug,image_name=image_name)
+            
+            if prediction not in predictions:
+                predictions[prediction] = []
+                
+            predictions[prediction] += [corr]
+            
+            if debug: print k,prediction,corr
+        elif k == "b": #two_digits
+            tw = 44
+            prediction,corr = prediction_box(image,templates,bb,tw,th,True,min_w=min_w,debug=debug,image_name=image_name)
+
+            if prediction not in predictions:
+                predictions[prediction] = []
+                
+            predictions[prediction] += [corr]
+
+            if debug: print k,prediction,corr
+        else: #one or two
+            tw = 32
+            prediction1,corr1 = prediction_box(image,templates,bb,tw,th,False,min_w=min_w,debug=debug,image_name=image_name)
+            if debug: print k,prediction1,corr1
+
+            tw = 44
+            prediction2,corr2 = prediction_box(image,templates,bb,tw,th,True,min_w=min_w,debug=debug,image_name=image_name)
+            if debug: print k,prediction2,corr2
+            
+            if corr1 > corr2:
+                prediction = prediction1
+                corr = corr1
+            else:
+                prediction = prediction2
+                corr = corr2
+                
+            if prediction not in predictions:
+                predictions[prediction] = []
+                
+            predictions[prediction] += [corr]
+
+    list_key_value = []
+    for k,v in predictions.iteritems():
+        #print k,v
+        list_key_value += [(len(v),max(v),k)]
+
+    list_key_value.sort()
+
+    if len(list_key_value) == 0:
         return None
-        
-    x, y, w, h = bb
-    
-    is_two_digits = w >= TWO_DIGIT_LIMIT
-    
-    if is_two_digits:
-        tw = 44
     else:
-        tw = 36 
-    
-    tb = get_target_bounding_box(bb,tw,th)
-    
-    #assert tb[2] <= tw, "problem with tw {0}:{1}".format(tb[2],tw)
-    #assert tb[3] <= th, "problem with th {0}:{1}".format(tb[3],th)
-    
-    if debug: print "target box",tb,"is_two_digits",is_two_digits
-
-    if tb is not None:
-        x, y, w, h = tb
-        x1 = x
-        x2 = x + w - max(tw/2,min_w)
-        w1 = max(tw/2,min_w)
-        w2 = max(tw/2,min_w)
-
-        selection = image[y:y+h,x:x+w]
-        selection = rgb2gray(selection)
-        prediction = match_digit(selection,templates,min_w=min_w,is_two_digits=is_two_digits,debug=debug)
-        
-        if is_two_digits and prediction[0] is not None and prediction[1] is not None:
-            prediction = prediction[0][1] * 10 + prediction[1][1]
-        elif not is_two_digits and prediction[0] is not None:
-            prediction = prediction[0][1]
-        else:
-            prediction = None
-
-    return prediction
+        #print list_key_value[-1]
+        return list_key_value[-1][2]
+            

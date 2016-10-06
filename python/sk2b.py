@@ -23,7 +23,8 @@ im_path = "/home/esepulveda/Documents/projects/roots/python/processing/5.26.AVI/
 im_path = "/home/esepulveda/Documents/projects/roots/python/processing/2.26.AVI/windows/frame-6/42.tiff"
 im_path = "/media/esepulveda/Elements/4-training/1.11/windows/frame-19/1.11-769.jpg"
 im_path = "/media/esepulveda/Elements/4-training/1.11/windows/frame-8/1.11-129.jpg"
-im_path = "/media/esepulveda/Elements/4-training/1.11/windows/frame-9/1.11-191.jpg"
+im_path = "/home/esepulveda/Documents/projects/roots/python/processing/1.25.AVI/accepted/1492.tiff"
+
 
 
 templates = load_templates("/home/esepulveda/Documents/projects/roots/python/models/templates")

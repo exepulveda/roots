@@ -16,8 +16,8 @@ from rest.video2images import extract_frames_from_video
 import prediction
 import utils
 from rest.find_best_window import select_and_restore
-import classify_template_matching
 
+import bound
 
 parser = argparse.ArgumentParser(description='Performe binary classifiacion of a new video')
 parser.add_argument('-l','--listfile', type=str,help='the filename of list of all videos to process',required=True)
@@ -154,9 +154,10 @@ def window_classification(video,video_status,configuration):
         
         if n > 0:
             #load binary_classifier
-            window_model = utils.load_model(configuration.model.window + ".json",configuration.model.window + ".h5")
+            #window_model = utils.load_model(configuration.model.window + ".json",configuration.model.window + ".h5")
             #loading templates
-            templates = classify_template_matching.load_templates(configuration)
+            #templates = classify_template_matching.load_templates(configuration)
+            templates = bound.load_templates(configuration.model.window_templates)
 
             images_ok = {}
             for i in all_windows:
@@ -171,8 +172,8 @@ def window_classification(video,video_status,configuration):
             batches = n // batch_size + 1
         
             #print (len(images_selected),batch_size,batches)
-            predicted_window_1 = np.empty(n,dtype=np.int32)
-            prob = np.empty(n)
+            #predicted_window_1 = np.empty(n,dtype=np.int32)
+            #prob = np.empty(n)
 
             #for i in range(batches):
             #    starting = i*batch_size
@@ -202,7 +203,8 @@ def window_classification(video,video_status,configuration):
             #MT
             for k,image_name in enumerate(image_list):
                 try:
-                    predicted_window_2 = classify_template_matching.classify_image(image_name,templates,debug=False)
+                    #predicted_window_2 = classify_template_matching.classify_image(image_name,templates,debug=False)
+                    predicted_window_2 = bound.predict(image_name,templates,debug=False)
 
                     #if predicted_window_1[k] == predicted_window_2:
                         #both methods predict the same, trust

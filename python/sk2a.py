@@ -19,12 +19,11 @@ from skimage.filters import threshold_otsu, threshold_adaptive
 from bound import filter_valid_boxes, get_bounding_box,limit_bounding_box,best_box,match_digit,load_templates
 from bound import get_target_bounding_box
 
-im_path = "/home/esepulveda/Documents/projects/roots/python/processing/5.26.AVI/windows/frame-8/3105.tiff"
-im_path = "/home/esepulveda/Documents/projects/roots/python/processing/2.26.AVI/windows/frame-6/42.tiff"
-im_path = "/media/esepulveda/Elements/4-training/1.11/windows/frame-9/1.11-174.jpg"
+
+im_path = "/home/esepulveda/Documents/projects/roots/python/processing/1.25.AVI/accepted/1492.tiff"
 
 image = data.imread(im_path)
-image = image[10:80,10:80]
+image = image[10:100,10:100]
 image = gaussian_filter(image, 1)
 
 templates = load_templates("/home/esepulveda/Documents/projects/roots/python/models/templates")
@@ -51,40 +50,43 @@ ax.imshow(image, cmap=plt.cm.gray)
 
 bb = best_box(image,debug=True)
 print "best box",bb
-x, y, w, h = bb
-
-rect = mpatches.Rectangle((x, y), w, h,fill=False, edgecolor='blue', linewidth=2)
-ax.add_patch(rect)
-
-
-try:
-    tw = 44 if w >= 30 else 24
-    th = 28
-    min_w = 24
-    bb = get_target_bounding_box(bb,tw,th)
+for k,bb in bb.iteritems():
+    x, y, w, h = bb
     
-    print "target box",bb
+    print k,x, y, w, h
 
-    if bb is not None:
-        x, y, w, h = bb
-        print "box",x, y, w, h
-        rect = mpatches.Rectangle((x, y), w, h,fill=False, edgecolor='green', linewidth=2)
-        ax.add_patch(rect)
-        x1 = x
-        x2 = x + w - max(tw/2,min_w)
-        w1 = max(tw/2,min_w)
-        w2 = max(tw/2,min_w)
-        rect = mpatches.Rectangle((x1, y), w1, h,fill=False, edgecolor='red', linewidth=2)
-        ax.add_patch(rect)
-        rect = mpatches.Rectangle((x2, y), w2, h,fill=False, edgecolor='red', linewidth=2)
-        ax.add_patch(rect)
+    rect = mpatches.Rectangle((x, y), w, h,fill=False, edgecolor='blue', linewidth=2)
+    ax.add_patch(rect)
 
-        selection = image[y:y+h,x:x+w]
-        selection = rgb2gray(selection)
-        prediction = match_digit(selection,templates,is_two_digits=True,debug=True)
-        print prediction
 
-except Exception as e:
-    print e
+    try:
+        tw = 44 if w >= 30 else 24
+        th = 28
+        min_w = 24
+        bb = get_target_bounding_box(bb,tw,th)
+        
+        print "target box",bb
+
+        if bb is not None:
+            x, y, w, h = bb
+            print "box",x, y, w, h
+            rect = mpatches.Rectangle((x, y), w, h,fill=False, edgecolor='green', linewidth=2)
+            ax.add_patch(rect)
+            x1 = x
+            x2 = x + w - max(tw/2,min_w)
+            w1 = max(tw/2,min_w)
+            w2 = max(tw/2,min_w)
+            rect = mpatches.Rectangle((x1, y), w1, h,fill=False, edgecolor='red', linewidth=2)
+            ax.add_patch(rect)
+            rect = mpatches.Rectangle((x2, y), w2, h,fill=False, edgecolor='red', linewidth=2)
+            ax.add_patch(rect)
+
+            selection = image[y:y+h,x:x+w]
+            selection = rgb2gray(selection)
+            prediction = match_digit(selection,templates,is_two_digits=True,debug=True)
+            print prediction
+
+    except Exception as e:
+        print e
 
 plt.show()
