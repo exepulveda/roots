@@ -8,10 +8,17 @@ def restore(images,iterations=50):
 
     num_of_images = len(images)
     ref_idx = num_of_images/2
+   
+    # Equalize all images
+    for i in images:
+        cv2.xphoto.balanceWhite(i, i, cv2.xphoto.WHITE_BALANCE_SIMPLE)
+
+    # At least 3 images are needed, otherwise we just return the first one
+    if num_of_images < 3:
+        return images[0];
 
     # Register images
     fixed = cv2.cvtColor(images[ref_idx],cv2.COLOR_BGR2GRAY)
-    
 
     # Find size
     sz = fixed.shape
@@ -19,22 +26,23 @@ def restore(images,iterations=50):
     # Define the motion model
     warp_mode = cv2.MOTION_HOMOGRAPHY
 
-    # Specify the number of iterations.
-    numOfIterations = iterations;
-
     # Specify the threshold of the increment
     # in the correlation coefficient between two iterations
     termination_eps = 1e-8;
 
     # Define termination criteria
-    criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, numOfIterations, termination_eps)
+    criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, iterations, termination_eps)
 
     alignedImages=[]
+    alignedImagesIntensity=[]
 
     i = 0
+    
     for moving in images:
+
         if i == ref_idx:
             aligned=images[ref_idx]
+            aligned_intensity = fixed
         else:
             # convert to intensity
             moving = cv2.cvtColor(moving, cv2.COLOR_BGR2GRAY)
@@ -48,20 +56,43 @@ def restore(images,iterations=50):
             aligned = cv2.warpPerspective(images[i], warp_matrix, (sz[1], sz[0]),
                                       flags=cv2.INTER_LINEAR + cv2.WARP_INVERSE_MAP)
 
+            aligned_intensity = cv2.cvtColor(aligned,cv2.COLOR_BGR2GRAY)
+
         alignedImages.append(aligned)
+        alignedImagesIntensity.append(aligned_intensity)
 
         i += 1
 
-    # split images in r,g,b channels
-    b = np.array([img[:,:,0] for img in alignedImages])
-    g = np.array([img[:,:,1] for img in alignedImages])
-    r = np.array([img[:,:,2] for img in alignedImages])
+    #ichannel = np.array([img[:,:] for img in alignedImagesIntensity])
+    #ichannel == alignedImagesIntensity
 
-    # restore image using the median pixel
-    b = np.uint8(np.median(b,0));
-    g = np.uint8(np.median(g,0));
-    r = np.uint8(np.median(r,0));
+    nx = sz[0]
+    ny = sz[1]
+    nz = num_of_images
 
-    restored = cv2.merge((b,g,r))
+    retr = np.empty((nx,ny))
+    retg = np.empty((nx,ny))
+    retb = np.empty((nx,ny))
+    for i in xrange(nx):
+        for j in xrange(ny):
+            ii = None
+            values = [x[i,j] for x in alignedImagesIntensity]
+	    values.sort()
+            center = values[nz//2]
+            for k in xrange(nz):
+                if alignedImagesIntensity[k][i,j] == center:
+                   ii = k
+                   break
+
+            assert ii is not None
+            retb[i,j] = alignedImages[ii][i,j,0] 
+            retg[i,j] = alignedImages[ii][i,j,1] 
+            retr[i,j] = alignedImages[ii][i,j,2] 
+  
+    retb = np.uint8(retb)
+    retg = np.uint8(retg)
+    retr = np.uint8(retr)
+
+    restored = cv2.merge((retb,retg,retr))
     return restored
 
