@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import os.path
 from rest.find_bounding_boxes import find_bounding_boxes
+from rest.find_bounding_boxes import find_bounding_boxes_filtered
+from rest.find_bounding_boxes import EXPECTED_SIZES
 
 from matplotlib import pyplot as plt
 
@@ -31,8 +33,23 @@ def find_zone(im):
     else:
         return 0,0,im.shape[0],im.shape[1]
     
+def classify_image(image,templates,threshold=0.2,debug=False,show=False):
+    im = cv2.imread(image)
+    ret = rank_image(im,templates,debug=debug,show=show)
     
-def classify_image(image,templates,threshold=0.2,debug=False):
+    t = []
+    for k,v in ret.iteritems():
+        t += [(v,k)]
+    
+    t.sort()
+    
+    if debug:
+        for v,k in t:
+            print v,k
+            
+    return t[-1][1]
+    
+def classify_image_old(image,templates,threshold=0.2,debug=False):
     im = cv2.imread(image)
     #im = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
     #first try to select a smaller rectangle where to find
@@ -187,6 +204,182 @@ def classify_image_2(image,templates,threshold=0.4,debug=False):
         
     return number
 
+
+def rank_image(im,templates,window_range=(6,54),debug=False,show=False):
+    digits1,digits2 = find_digits_image(im,templates,debug=debug,show=show)
+    #print digits
+    
+    ret = {}
+    #digits is tuple (digit,error,part)
+    for w in range(window_range[0],window_range[1]+1):
+        if digits1 is None and digits2 is None:
+            error = -10.0
+        else:
+            if w < 10:
+                if digits2 is not None:
+                    #wrong case, it should be 1
+                    error = -10.0
+                elif len(digits1) > w:
+                    if debug: print "ranking",w,digits1[w][0]
+                    error = digits1[w][0]
+                else:
+                    error = -10.0
+            else:
+                if digits2 is None:
+                    #wrong case, it should be 2
+                    error = -10.0
+                else:
+                    d1,d2 = str(w)
+                    d1 = int(d1)
+                    d2 = int(d2)
+                    if debug: print "ranking",w,d1,d2,digits1[d1],digits2[d2]
+                    #d1 it should be in first box
+                    error1 = digits1[d1][0]
+                    error2 = digits2[d2][0]
+                        
+                    error = (error1 + error2)/2.0
+            
+                
+        ret[w] = error
+            
+    return ret
+
+def find_digits_image(im,templates,debug=False,show=False):
+    #im = cv2.imread(image)
+    #im = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+    #first try to select a smaller rectangle where to find
+    #mode_image = np.mean(im)
+        
+    digits = []
+
+    expected_sizes = [(15,30,True),(19,30,True),(34,30,False),(38,30,False)]
+
+    boundings = find_bounding_boxes_filtered(im,expected_sizes,tol=.25,histogram_th=0.95,debug=debug,show=show)
+    boundings.sort()
+    
+    if debug:
+        print "find_digits_image::len(boundings)",len(boundings)
+
+    if len(boundings) == 0:
+        boundings = find_bounding_boxes_filtered(im, expected_sizes,tol=.25,histogram_th=0.90,debug=debug,show=show)    
+        
+    if debug:
+        print "len(boundings)",len(boundings)
+
+    if len(boundings) == 0:
+        return None,None
+
+    if len(boundings) >= 2:
+        #try to join
+        #bounding1 = boundings[0]
+        #bounding2 = boundings[1]
+        
+        is_one_digit1,x1,y1,w1,h1 = boundings[0]
+        is_one_digit2,x2,y2,w2,h2 = boundings[1]
+        
+        xend = max(x1+w1,x2+w2)
+        yend = max(y1+h1,y2+h2)
+        
+        
+        boundings[0] = (False,min(x1,x2),min(y1,y2),xend - min(x1,x2), yend - min(y1,y2))
+        
+        
+    #we have found boxes, try to 
+    bounding = boundings[0]
+    is_one_digit,x,y,w,h = bounding
+    
+    if debug: print "find_digits_image:",is_one_digit,x,y,w,h
+    
+    h = max(h,30)
+    w = max(w,20)
+
+    if debug: print bounding
+    
+    if is_one_digit: #one number
+        im2 = im[y:y+h,x:x+w]
+        
+        if show:
+            cv2.imshow('res', im2)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()         
+        rank1 = rank_digits_box(im2,templates,debug=debug)
+        #rank1.sort()
+        digit1 = rank1
+        digit2 = None
+        
+    else:
+        im2 = im[y:y+h,x:x+19]
+        rank1 = rank_digits_box(im2,templates,debug=debug)
+        #ank1.sort()
+        digit1 = rank1
+
+        if show:
+            cv2.imshow('res', im2)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()         
+
+        if debug: print "rank1",rank1
+
+        #get the best digit1
+        lcopy = list(rank1)
+        lcopy.sort()
+        d1 = lcopy[-1][2]
+        w1,h1 = EXPECTED_SIZES[d1]
+
+        if debug: print "expected d1",lcopy,d1,w1,h1
+
+
+        im2 = im[y:y+h,x+w1+1:x+w1+1+19]
+        rank2 = rank_digits_box(im2,templates,debug=debug)
+        #rank2.sort()
+        digit2 = rank2
+
+        if show:
+            cv2.imshow('res', im2)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()         
+
+        if debug:
+            print "rank2",rank2
+
+
+    return digit1,digit2
+    
+def rank_digits_box(im,templates,debug=False):
+    '''this function rank all digits in an box
+    '''
+    digits = []
+
+    bh,bw,_ = im.shape
+
+    for digit,template in templates.iteritems():
+        ew,eh = EXPECTED_SIZES[digit]
+        th,tw,_ = template.shape
+
+        w = max(min(bw,ew),tw)
+        h = max(min(bh,eh),th)
+
+        if debug: print w,h,bw,bh
+        
+        im1 = im[:h,:w]
+        
+        try:
+            res = cv2.matchTemplate(im1,template,cv2.TM_CCOEFF_NORMED)
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+
+            if debug:
+                print digit,max_val,max_loc
+
+            digits += [(max_val,max_loc,digit)]
+
+
+        except Exception as e:
+            print "OPECV ERROR 1:",digit,template.shape,im1.shape,e
+            digits += [(-10.0,0,digit)]
+    
+    return digits
+    
+
 if __name__ == "__main__":
     x = "/home/esepulveda/Documents/projects/roots/training/1.14/oks/frame-23/01213.jpg"
     x = "/home/esepulveda/Documents/projects/roots/training/1.14/oks/frame-53/03421.jpg"
@@ -194,16 +387,53 @@ if __name__ == "__main__":
     #x = "/home/esepulveda/Documents/projects/roots/python/processing/1.14.AVI/windows/frame-6/182.tiff"
     x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-6/952.tiff"
     x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-14/1540.tiff"
-    x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-17/79.tiff" #6
-    img = cv2.imread(x)
 
-    boundings = find_bounding_boxes(img,(20,30))
-    print boundings
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-17/660.tiff" #6
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-7/146.tiff" #6
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-17/660.tiff" #6
+    
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/2.23.AVI/windows/frame-50/1016.tiff" # 11 but 41
+
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/1.24.AVI/windows/frame-50/2326.tiff" # 11 but 41
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/1.24.AVI/windows/frame-9/298.tiff" # 9 and 9
+    x = "/home/esepulveda/Documents/projects/roots/python/processing/1.24.AVI/allframes/780.tiff" # 13
 
     templates = load_templates(configuration)
+    
+    ret = classify_image(x,templates,threshold=0.2,debug=True,show=True)
+    print ret
 
-    img = cv2.imread(x)
-    print classify_image(x,templates,threshold=0.2,debug=True) 
+    quit()
+
+
+
+    
+    #find_bounding_boxes(img,exp_size,tol=.25,histogram_th=0.9,overlap=3)
+    window = 10
+    s1 = EXPECTED_SIZES[1]
+    s2 = EXPECTED_SIZES[0]
+    es = (s1[0]+s2[0],(s1[1]+s2[1])//2)
+    boundings = find_bounding_boxes(img,es,tol=.25,histogram_th=0.99,overlap=3,debug=True,show=True)
+    #print boundings
+    for b in boundings:
+        x,y,w,h = b
+        
+        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 1)
+
+    cv2.imshow('res', img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()    
+    quit()
+    
+
+    #img = cv2.imread(x)
+    ret = rank_image(img,templates,debug=True) 
+    #ret.sort()
+    
+    for k,v in ret.iteritems():
+        print k,v
+        
+    
     
     
     quit()

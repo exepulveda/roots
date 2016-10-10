@@ -123,7 +123,7 @@ def make_X_y_convnet(images,w,h,offset=None,size=None):
 
     return X,y
 
-def make_X_y_convnet_opencv(images,offset=None,size=None):
+def make_X_y_convnet_opencv(images,offset=None,size=None,target_size=None):
     n = len(images)
     
     X = None
@@ -135,6 +135,10 @@ def make_X_y_convnet_opencv(images,offset=None,size=None):
     for i,(image_filename,tag) in enumerate(images):
         #print image_filename,tag
         image = load_image_opencv(image_filename,offset=offset,size=size)
+        
+        if target_size is not None:
+            image = cv2.resize(image,target_size) 
+        
         #image shape is (h,w,channels) but keras needs (channel,h,w)
         image = np.moveaxis(image,-1,0) #move channels to first axis
         

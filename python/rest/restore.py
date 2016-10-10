@@ -37,34 +37,33 @@ def restore(images,iterations=50):
     alignedImagesIntensity=[]
 
     i = 0
-    
     for moving in images:
 
         if i == ref_idx:
             aligned=images[ref_idx]
             aligned_intensity = fixed
         else:
-            # convert to intensity
-            moving = cv2.cvtColor(moving, cv2.COLOR_BGR2GRAY)
+            try:
+                # convert to intensity
+                moving = cv2.cvtColor(moving, cv2.COLOR_BGR2GRAY)
 
-            # Define 3x3 matrices and initialize the matrix to identity
-            warp_matrix = np.eye(3, 3, dtype=np.float32)
+                # Define 3x3 matrices and initialize the matrix to identity
+                warp_matrix = np.eye(3, 3, dtype=np.float32)
 
-            # Run the ECC algorithm. The results are stored in warp_matrix.
-            (cc, warp_matrix) = cv2.findTransformECC(fixed, moving, warp_matrix, warp_mode, criteria)
+                # Run the ECC algorithm. The results are stored in warp_matrix.
+                (cc, warp_matrix) = cv2.findTransformECC(fixed, moving, warp_matrix, warp_mode, criteria)
 
-            aligned = cv2.warpPerspective(images[i], warp_matrix, (sz[1], sz[0]),
-                                      flags=cv2.INTER_LINEAR + cv2.WARP_INVERSE_MAP)
+                aligned = cv2.warpPerspective(images[i], warp_matrix, (sz[1], sz[0]),
+                                          flags=cv2.INTER_LINEAR + cv2.WARP_INVERSE_MAP)
+            except:
+                aligned = None
 
+        if aligned is not None:
             aligned_intensity = cv2.cvtColor(aligned,cv2.COLOR_BGR2GRAY)
-
-        alignedImages.append(aligned)
-        alignedImagesIntensity.append(aligned_intensity)
+            alignedImages.append(aligned)
+            alignedImagesIntensity.append(aligned_intensity)
 
         i += 1
-
-    #ichannel = np.array([img[:,:] for img in alignedImagesIntensity])
-    #ichannel == alignedImagesIntensity
 
     nx = sz[0]
     ny = sz[1]
