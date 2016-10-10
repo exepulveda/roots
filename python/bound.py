@@ -25,35 +25,35 @@ ONE_DIGIT_LIMIT = 25
 TWO_DIGITS_LIMIT   = 32
 
 def load_templates(path):
-	ret = [None]*10
-	for i in range(10):
-		tmp_fn = os.path.join(path,"{0}.tiff".format(i))
-		if os.path.exists(tmp_fn):
-			image = data.imread(tmp_fn)
-			gray = rgb2gray(image)
-			ret[i] = gray
+    ret = [None]*10
+    for i in range(10):
+        tmp_fn = os.path.join(path,"{0}.tiff".format(i))
+        if os.path.exists(tmp_fn):
+            image = data.imread(tmp_fn)
+            gray = rgb2gray(image)
+            ret[i] = gray
 
-	return ret
+    return ret
 
 def filter_valid_boxes(boxes,min_width,max_width,min_height,max_height,min_a,max_a,debug=False):
-	#first filter height
-	if debug: print "boxes",boxes
-	if debug: print "min-max",min_width,max_width,min_height,max_height,max_a
-	
-	filter1 = []
-	for x,y,w,h in boxes:
-		if debug: print "filter1:boxes",w,h,w*h
-		if min_height <= h <= max_height and min_width <= w <= max_width and min_a <= w*h <= max_a:
-			filter1 += [(x,y,w,h)]
-	
-	if debug: print "filter1",filter1
-	#print "filter2",filter2
-	
-	return filter1
-	
+    #first filter height
+    if debug: print "boxes",boxes
+    if debug: print "min-max",min_width,max_width,min_height,max_height,max_a
+    
+    filter1 = []
+    for x,y,w,h in boxes:
+        if debug: print "filter1:boxes",w,h,w*h
+        if min_height <= h <= max_height and min_width <= w <= max_width and min_a <= w*h <= max_a:
+            filter1 += [(x,y,w,h)]
+    
+    if debug: print "filter1",filter1
+    #print "filter2",filter2
+    
+    return filter1
+    
 def distance(x1,y1,x2,y2):
-	return np.sqrt((x1-x2)**2 + (y1-y2)**2)
-	
+    return np.sqrt((x1-x2)**2 + (y1-y2)**2)
+    
 def get_bounding_box(boxes,min_a,max_a,debug=False,max_distance=25.0):
     #boxes are already filtered
     #order according area
@@ -90,27 +90,27 @@ def get_bounding_box(boxes,min_a,max_a,debug=False,max_distance=25.0):
         return boxes[0]
 
 def limit_bounding_box(boxes,limit,debug=False):
-	above_limit = []
-	under_limit = []
-	for bb in boxes:
-		x,y,w,h = bb
-		if w >= limit:
-			above_limit += [(x,y,w,h)]
-		else:
-			under_limit += [(x,y,w,h)]
-	if len(above_limit) > 0:
-		return above_limit
-	else:
-		return under_limit
-		
+    above_limit = []
+    under_limit = []
+    for bb in boxes:
+        x,y,w,h = bb
+        if w >= limit:
+            above_limit += [(x,y,w,h)]
+        else:
+            under_limit += [(x,y,w,h)]
+    if len(above_limit) > 0:
+        return above_limit
+    else:
+        return under_limit
+        
 def get_target_bounding_box(box,tw,th):
-	#middle point
-	x,y,w,h = box
-	xm = x + w/2.0
-	ym = y + h/2.0
-	
-	return max(0,int(xm - tw/2.0)),max(0,int(ym - th/2.0)),tw,th
-	
+    #middle point
+    x,y,w,h = box
+    xm = x + w/2.0
+    ym = y + h/2.0
+    
+    return max(0,int(xm - tw/2.0)),max(0,int(ym - th/2.0)),tw,th
+    
 def best_box(image,global_thresh=None,steps=20,one_digit_limit=ONE_DIGIT_LIMIT,two_digits_limit=TWO_DIGITS_LIMIT,debug=False):
     ret = []
     gray = rgb2gray(image)
@@ -201,16 +201,16 @@ def get_all_boxes(image,global_thresh=None,steps=20,limit=TWO_DIGITS_LIMIT,debug
     
     
 def match(image,template,debug=False):
-	if debug: print image.shape,template.shape
-	result = match_template(image, template)
-	
-	#find i,j with maxvalue
-	maxrow = np.argmax(result,axis=1)
-	if debug: print maxrow
-	maxcol = np.argmax(result,axis=0)
-	if debug: print maxcol
-	#maxcorrel = result[maxrow,maxcol]
-	return np.max(result)
+    if debug: print image.shape,template.shape
+    result = match_template(image, template)
+    
+    #find i,j with maxvalue
+    maxrow = np.argmax(result,axis=1)
+    if debug: print maxrow
+    maxcol = np.argmax(result,axis=0)
+    if debug: print maxcol
+    #maxcorrel = result[maxrow,maxcol]
+    return np.max(result)
     
 def match_digit(image,templates,min_w=24,is_two_digits=True,debug=False):
     h,w = image.shape
@@ -265,7 +265,45 @@ def match_digit(image,templates,min_w=24,is_two_digits=True,debug=False):
             ret.sort()
             #best digit is the last
             return ret[-1],None
+
+def match_all_window(image,templates,min_w=24,is_two_digits=True,debug=False):
+    
+    h,w = image.shape
+    
+    if debug: print "match_all_window:h,w",h,w,min_w,is_two_digits
+    
+    wlimit = max(w/2,min_w)
+
+    ret = np.zeros((54-6+1,2))
+    for window in range(6,55):
+        if window <= 9 and not is_two_digits:
+            corr = np.max(match_template(image[:,:wlimit], templates[window]))
+            ret[window-6,0] += corr
+            ret[window-6,1] += 1
+            if debug: print "match_all_window:window",window,corr
+
+        elif window > 9 and is_two_digits:
+            sw = str(window)
+            d1 = int(sw[0])
+            d2 = int(sw[1])
             
+            r1 = np.max(match_template(image[:,:wlimit], templates[d1]))
+            r2 = np.max(match_template(image[:,w - wlimit:], templates[d2]))
+            
+            #normalize correlations
+            h1,w1 = templates[d1].shape
+            h2,w2 = templates[d2].shape
+            weight1 = h1*w1/float(h1*w1 + h2*w2)
+            weight2 = h2*w2/float(h1*w1 + h2*w2)
+ 
+            if debug: print "match_all_window:window",window,r1,r2,h1,w1,h2,w2,weight1,weight2,(weight1*r1 + weight2*r2)
+ 
+            #ret[window-6,0] += (weight1*r1 + weight2*r2)
+            ret[window-6,0] += (r1 + r2)*0.5
+            ret[window-6,1] += 1
+
+    return ret
+    
 def predict_mode(image_name,templates,tw=44,th=28,min_w=24,debug=False):
     image = data.imread(image_name)
     image = image[10:80,10:80]
@@ -351,8 +389,15 @@ def prediction_box(image,templates,bb,tw,th,is_two_digits,min_w=24,debug=False,i
 
     return (window,correl)
     
+def predict(image_name,templates,debug=False):
+    prediction = predict_all_window(image_name,templates,debug=debug)
 
-def predict(image_name,templates,tw=44,th=28,min_w=24,debug=False):
+    best = np.argmax(prediction,axis=0)
+
+    return best + 6
+
+
+def predict_2(image_name,templates,tw=44,th=28,min_w=24,debug=False):
     #image = data.imread(image_name)
     #
     image = cv2.imread(image_name)
@@ -425,3 +470,89 @@ def predict(image_name,templates,tw=44,th=28,min_w=24,debug=False):
         #print list_key_value[-1]
         return list_key_value[-1][2]
             
+def predict_all_window(image_name,templates,th=28,min_w=24,debug=False):
+    #image = data.imread(image_name)
+    #
+    image = cv2.imread(image_name)
+    image = gaussian_filter(image, 1)
+    image = image[5:100,5:100]
+    
+    
+    bboxes = best_box(image,debug=debug)
+    nboxes = len(bboxes)
+    
+    if debug: print "predict_all_window:nboxes",nboxes,image.shape
+    
+    ret = np.zeros((54-6+1,2))
+    
+    
+    if bboxes is None or len(bboxes) == 0: return ret[:,0]
+    
+    for k,bb in bboxes.iteritems():
+        if debug: print "predict_all_window",k,bb
+        if k == "a": #one_digit
+            tw = 32
+            tb = get_target_bounding_box(bb,tw,th)
+            
+            x, y, w, h = tb
+            x1 = x
+            x2 = x + w - max(tw/2,min_w)
+            w1 = max(tw/2,min_w)
+            w2 = max(tw/2,min_w)
+
+            selection = image[y:y+h,x:x+w]
+            selection = rgb2gray(selection)        
+            
+            ret += match_all_window(selection,templates,min_w=min_w,is_two_digits=False,debug=debug)
+        elif k == "b": #two_digits
+            tw = 44
+            tb = get_target_bounding_box(bb,tw,th)
+            
+            x, y, w, h = tb
+            x1 = x
+            x2 = x + w - max(tw/2,min_w)
+            w1 = max(tw/2,min_w)
+            w2 = max(tw/2,min_w)
+
+            selection = image[y:y+h,x:x+w]
+            selection = rgb2gray(selection)  
+            ret += match_all_window(selection,templates,min_w=min_w,is_two_digits=True,debug=debug)
+        else: #one or two
+            tw = 32
+            tb = get_target_bounding_box(bb,tw,th)
+            
+            x, y, w, h = tb
+            x1 = x
+            x2 = x + w - max(tw/2,min_w)
+            w1 = max(tw/2,min_w)
+            w2 = max(tw/2,min_w)
+
+            selection = image[y:y+h,x:x+w]
+            selection = rgb2gray(selection)  
+            ret += match_all_window(selection,templates,min_w=min_w,is_two_digits=False,debug=debug)
+            
+            
+            tw = 44
+            tb = get_target_bounding_box(bb,tw,th)
+            
+            x, y, w, h = tb
+            x1 = x
+            x2 = x + w - max(tw/2,min_w)
+            w1 = max(tw/2,min_w)
+            w2 = max(tw/2,min_w)
+
+            selection = image[y:y+h,x:x+w]
+            selection = rgb2gray(selection)  
+            ret += match_all_window(selection,templates,min_w=min_w,is_two_digits=True,debug=debug)
+            
+
+    indices = np.where(ret[:,1]>1)
+    
+    if debug: print indices,ret[indices,0],ret[indices,1]
+    
+    p = ret[:,0]
+    p[indices] = p[indices]/ret[indices,1]
+    
+    if debug: print p.shape
+    
+    return p

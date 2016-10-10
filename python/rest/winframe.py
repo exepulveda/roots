@@ -39,6 +39,8 @@ def winframe(images, win_sz=7):
             if d < best_d:
                 best_d = d
                 best_win = win
+    elif n >= 5:
+        best_win = winframe(images, win_sz=5)
     else:
         best_win = images
 
