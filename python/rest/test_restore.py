@@ -3,7 +3,7 @@ from restore import *
 from winframe import *
 
 # Set input and output paths
-DATA_PATH = '/Users/exequiel/Dropbox/ap-es-projects/selection-wrong/1.25/windows/frame-51/' 
+DATA_PATH = '/Users/a1613915/Dropbox/alvaro-projects/selection-wrong/1.25/windows/frame-29/' 
 OUT_PATH = 'results'
 
 # Create output dir
