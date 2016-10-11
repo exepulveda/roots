@@ -18,6 +18,7 @@ import utils
 from rest.find_best_window import select_and_restore
 
 import bound
+from fixer import fix_prediction
 
 parser = argparse.ArgumentParser(description='Performe binary classifiacion of a new video')
 parser.add_argument('-l','--listfile', type=str,help='the filename of list of all videos to process',required=True)
@@ -143,6 +144,17 @@ def window_classification(video,video_status,configuration):
         image_list = []
         utils.expand_folder(accepted_folder,image_list)    
         n = len(image_list)
+        
+        ss = []
+        for image_name in image_list:
+            fname, extension = os.path.splitext( os.path.basename(image_name))
+            ss += [(int(fname),image_name)]
+
+        ss.sort()
+        
+        image_list = [x[1] for x in ss]
+        image_numbers_list = [x[0] for x in ss]
+
 
         #deleting window_folder
         if os.path.exists(window_folder):
@@ -166,69 +178,37 @@ def window_classification(video,video_status,configuration):
             ok_2 = 0
             ok_cnn = 0
             ok_mt = 0
-
-            #CNN classifier
-            batch_size = configuration.batch_size
-            batches = n // batch_size + 1
-        
-            #print (len(images_selected),batch_size,batches)
-            #predicted_window_1 = np.empty(n,dtype=np.int32)
-            #prob = np.empty(n)
-
-            #for i in range(batches):
-            #    starting = i*batch_size
-            #    ending = min(starting+batch_size,n)
-
-            #    images_batch = np.empty((ending-starting,3,configuration.input.binary_height,configuration.input.binary_width))
-
-            #   #print (i,starting,ending)
             
-            #    for k in range(starting,ending):
-            #        #load the image
-            #        image_name = image_list[k]
-                    
-            #        im = utils.load_image_opencv(image_name,offset={"w":offset_w,"h":offset_h},size={"w":target_w,"h":target_h})
-            #        im = np.array(im,dtype=np.float32) / 255.0
-            #        im = np.moveaxis(im,-1,0) #move channels to first axis
-
-            #        im = im[np.newaxis,:,:,:] #add batch channel
-                        
-            #        images_batch[k-starting,:,:,:] = im
-
-            #    predicted_window_1_batch,prob_batch = prediction.predict_window_opencv_batch(images_batch,window_model,configuration)
-
-            #    predicted_window_1[starting:ending] = predicted_window_1_batch
-            #    prob[starting:ending] = prob_batch
-
-            #MT
+            predictions = []
             for k,image_name in enumerate(image_list):
                 try:
-                    #predicted_window_2 = classify_template_matching.classify_image(image_name,templates,debug=False)
-                    predicted_window_2 = bound.predict(image_name,templates,debug=False)
+                    predicted_window = bound.predict(image_name,templates,debug=False)
 
-                    #if predicted_window_1[k] == predicted_window_2:
-                        #both methods predict the same, trust
-                    #    predicted_window = predicted_window_1[k]
-                    #    ok_2 += 1
-                    #else:
-                        #if prob[k] > configuration.model.min_probability or predicted_window_2 is None:
-                        #    #if 70% of classifier or not classification using matching, trust on classifier
-                        #    predicted_window = predicted_window_1[k]
-                        #    ok_cnn += 1
-                        #else:
-                        #trust on matching
-                    predicted_window = predicted_window_2
+                    
                     ok_mt += 1
 
                     if predicted_window in all_windows:
                         images_ok[predicted_window] += [image_name]
-                        
-                        destination = os.path.join(window_folder,"frame-{0}".format(predicted_window))
-                        if not os.path.exists(destination):
-                            os.mkdir(destination)
-                        
-                        shutil.copy(image_name,destination)
+
+                    predictions += [predicted_window if predicted_window else 0]
                 except:
+                    predictions += [0]
+                
+
+            #fix
+            predictions_fixed = fix_prediction(image_numbers_list,predictions)
+
+            for k,image_name in enumerate(image_list):
+                predicted_window = predictions_fixed[k]
+                if predicted_window in all_windows:
+                    images_ok[predicted_window] += [image_name]
+                    
+                    destination = os.path.join(window_folder,"frame-{0}".format(predicted_window))
+                    if not os.path.exists(destination):
+                        os.mkdir(destination)
+                    
+                    shutil.copy(image_name,destination)
+                else:
                     print("error: ",image_name)
 
             logging.info("STEP 3: report...")
