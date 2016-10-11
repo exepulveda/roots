@@ -17,7 +17,7 @@ def restore(images,iterations=50):
     if num_of_images < 3:
         return images[0];
 
-    # Register images
+    # Register image in the middle 
     fixed = cv2.cvtColor(images[ref_idx],cv2.COLOR_BGR2GRAY)
 
     # Find size
@@ -76,7 +76,7 @@ def restore(images,iterations=50):
         for j in xrange(ny):
             ii = None
             values = [x[i,j] for x in alignedImagesIntensity]
-	    values.sort()
+            values.sort()
             center = values[nz//2]
             for k in xrange(nz):
                 if alignedImagesIntensity[k][i,j] == center:

@@ -17,6 +17,7 @@ if not os.path.exists(OUT_PATH):
 for framename in [DATA_PATH]:
     # Load the images of the frame
     inames = glob.glob('{}/*.tiff'.format(framename))
+    print inames
     numOfImages=len(inames)
     images = [cv2.imread(inames[i]) for i in range(numOfImages)]
 
