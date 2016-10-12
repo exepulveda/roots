@@ -389,7 +389,7 @@ def prediction_box(image,templates,bb,tw,th,is_two_digits,min_w=24,debug=False,i
 
     return (window,correl)
     
-def predict(image_name,templates,debug=False):
+def predict_3(image_name,templates,debug=False):
     prediction = predict_all_window(image_name,templates,debug=debug)
 
     best = np.argmax(prediction,axis=0)
@@ -397,7 +397,7 @@ def predict(image_name,templates,debug=False):
     return best + 6
 
 
-def predict_2(image_name,templates,tw=44,th=28,min_w=24,debug=False):
+def predict(image_name,templates,tw=44,th=28,min_w=24,debug=False):
     #image = data.imread(image_name)
     #
     image = cv2.imread(image_name)
@@ -407,7 +407,11 @@ def predict_2(image_name,templates,tw=44,th=28,min_w=24,debug=False):
     
     bboxes = best_box(image,debug=debug)
     
-    if bboxes and len(bboxes) == 0: return None
+    if bboxes is None or len(bboxes) == 0: return None
+    
+    if len(bboxes) == 3:
+        if "a" in bboxes and "b" in bboxes:
+            del bboxes["a"]
     
     best_prediction = None
     best_corr = None

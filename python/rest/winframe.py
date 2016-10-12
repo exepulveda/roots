@@ -4,7 +4,7 @@ import numpy as np
 # Find a windows frame such that the error is minimised w.r.t.
 # the central frame of the windows
 
-HISTRES = 8
+HISTRES = 11
 
 def win_dist(images):
     n = len(images)
@@ -25,7 +25,7 @@ def win_dist(images):
     return d
 
 
-def winframe(images, win_sz=7):
+def winframe(images, win_sz=7,debug=False):
     # Find the windows frame with the lesser error
 
     n = len(images)
@@ -39,8 +39,9 @@ def winframe(images, win_sz=7):
             if d < best_d:
                 best_d = d
                 best_win = win
-    elif n >= 5:
-        best_win = winframe(images, win_sz=5)
+                if debug: print i, i + win_sz
+    elif n > 3:
+        best_win = winframe(images,win_sz=3,debug=debug)
     else:
         best_win = images
 

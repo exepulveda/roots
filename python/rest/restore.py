@@ -95,3 +95,24 @@ def restore(images,iterations=50):
     restored = cv2.merge((retb,retg,retr))
     return restored
 
+
+def find_the_most_similar(images_data):
+    from skimage.measure import compare_ssim
+
+    n = len(images_data)
+
+    sim = np.zeros((n,n))
+
+    for i in xrange(n):
+        image_i = images_data[i]
+        for j in xrange(i,n):
+            image_j = images_data[j]
+            sim[i,j] = compare_ssim(image_i,image_j,multichannel=True) #,gaussian_weights=True)
+            sim[j,i] = sim[i,j]
+
+    ret = np.sum(sim,axis=0)
+    
+    ret = zip(ret,range(n))
+    ret.sort()
+    
+    return ret[-1][1]
