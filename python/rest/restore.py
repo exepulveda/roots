@@ -8,7 +8,7 @@ def restore(images,iterations=50):
 
     num_of_images = len(images)
     ref_idx = num_of_images/2
-   
+ 
     # Equalize all images
     for i in images:
         cv2.xphoto.balanceWhite(i, i, cv2.xphoto.WHITE_BALANCE_SIMPLE)
@@ -17,7 +17,7 @@ def restore(images,iterations=50):
     if num_of_images < 3:
         return images[0];
 
-    # Register image in the middle 
+    # Register imags w.r.t. the central one
     fixed = cv2.cvtColor(images[ref_idx],cv2.COLOR_BGR2GRAY)
 
     # Find size

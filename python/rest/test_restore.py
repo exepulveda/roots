@@ -3,7 +3,8 @@ from restore import *
 from winframe import *
 
 # Set input and output paths
-DATA_PATH = '/Users/a1613915/Dropbox/alvaro-projects/selection-wrong/1.25/windows/frame-29/' 
+DATA_PATH = '/Users/a1613915/Dropbox/alvaro-projects/selection-wrong/1.25/windows/frame-50/' 
+
 OUT_PATH = 'results'
 
 # Create output dir
@@ -21,7 +22,6 @@ for framename in [DATA_PATH]:
     numOfImages=len(inames)
     images = [cv2.imread(inames[i]) for i in range(numOfImages)]
 
-    # Find the best windows frame
     wf = winframe(images)
 
     # Restore images from the windows frame

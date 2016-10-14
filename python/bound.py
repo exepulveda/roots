@@ -377,6 +377,9 @@ def prediction_box(image,templates,bb,tw,th,is_two_digits,min_w=24,debug=False,i
         prediction = match_digit(selection,templates,min_w=min_w,is_two_digits=is_two_digits,debug=debug)
     except Exception as e:
         print "problem with image",image_name,e
+        correl = None
+        window = None
+        return (window,correl)
     
     if is_two_digits and prediction[0] is not None and prediction[1] is not None:
         window = prediction[0][1] * 10 + prediction[1][1]

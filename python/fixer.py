@@ -26,29 +26,30 @@ def repair_1(x,y):
 def fix_prediction(images_numbers, predictions):
 	x = np.int32(images_numbers)
 	y = np.int32(predictions)
-	
+	th = 6
+    
 	n = len(x)
 	
-	while True:
-		k = repair_1(x,y)
-		if k == 0: break
+    #	while True:
+    #	k = repair_1(x,y)
+    #	if k == 0: break
 
 	X = x.reshape((n,1))
 	model = lreg(X,y)
 
 	pred = model.predict(X)
 
-	pred = np.int32(np.clip(pred,6,54))
+	pred = np.int32(np.clip(pred,th,54))
 
 	#difference
 	diff = np.abs(y-pred)
 	#find higher
-	indices = np.where(diff> 4)
+	indices = np.where(diff>= th)
 
 	y2 = np.array(y)
 	y2[indices] = pred[indices]
 
-	k = repair_1(x,y2)
-	print k
+#k = repair_1(x,y2)
+#	print k
 
 	return y2
