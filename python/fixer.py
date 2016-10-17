@@ -82,6 +82,67 @@ def repair_2(x,y,debug=False):
         
     return k
 
+def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
+    X = x.reshape((n,1))
+    y = np.array(y_original)
+
+
+    model = lreg(X,y, th_detect)
+    pred = model.predict(X)
+    pred = np.int32(np.clip(np.round(pred),6,54))
+    line_X = np.arange(np.min(x),np.max(x))
+    line_y = model.predict(line_X[:, np.newaxis])
+
+    # find ransac outliers
+    diff = np.abs(y-pred)
+    outlrs_indices = np.argwhere(diff> th_fix)
+    inlrs_indices =  np.argwhere(diff<= th_fix)
+
+
+    x_inlrs = [a[0] for a in x[inlrs_indices]]
+    indices_inlrs = [a[0] for a in inlrs_indices]
+    indices_outlrs = [a[0] for a in outlrs_indices]
+
+    if debug: print "x_inlrs:",x_inlrs
+
+
+
+    for k in outlrs_indices:
+        k = k[0]
+        
+        if debug: print "looking for:",k,x[k]
+        left_inlr = np.searchsorted(x_inlrs,x[k]) - 1
+        right_inlr = left_inlr+1
+        
+        if left_inlr < 0:
+            #let fix to the next 
+            y[k] = y[indices_inlrs[0]]
+        elif right_inlr < len(x_inlrs):
+            xa = x_inlrs[left_inlr];
+            xb = x_inlrs[right_inlr];
+                
+            ya = y[indices_inlrs[left_inlr]]
+            yb = y[indices_inlrs[right_inlr]]
+
+            if ya == yb:
+                y[k] = ya
+            else:
+                #calculate regression
+                y_pred = np.round(ya + (x[k]-xa)*float(yb-ya)/float(xb-xa))
+
+                if debug: print left_inlr,x_inlrs[left_inlr],x_inlrs[right_inlr],y[indices_inlrs[left_inlr]],y[indices_inlrs[right_inlr]],y_pred
+                y[k] = y_pred
+        else:
+            y[k] = y[indices_inlrs[left_inlr]]
+
+        #insert prediction as in inliers
+        x_inlrs = np.insert(x_inlrs,left_inlr+1,x[k])
+        indices_inlrs = np.insert(indices_inlrs,left_inlr+1,k)
+        #find inliers both size
+
+
+    y = np.int32(np.round(y))
+    return y
 
 def fix_prediction(images_numbers, predictions):
     x = np.int32(images_numbers)
@@ -89,45 +150,16 @@ def fix_prediction(images_numbers, predictions):
 
     n = len(x)
 
-    while True:
-        k = repair_1(x,y)
-        if k == 0: break
+    #repair obvious errors
+    k = repair_1(x,y)
 
-    #look from 7 to 53
-    i_start = 1
-    for i in xrange(n):
-        if y[i] == 7:
-            i_start = i
-            break
-    th = 6
+    #repair outliers
+    y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=2,debug=False)
     
-
-    i_end = n-1
-    for i in xrange(n-1,0,-1):
-        if y[i] == 53:
-            i_end = i
-            break
     
-    X = x[i_start:i_end]
-    m = len(X)
-    X = X.reshape((m,1))
-    model = lreg(X,y[i_start:i_end])
-
-    pred_ori = model.predict(X)
-    
-    pred = np.array(y)
-    pred[i_start:i_end] = pred_ori
-
-    pred = np.int32(np.clip(pred,th,54))
-
-    #difference
-    diff = np.abs(y-pred)
-    #find higher
-    indices = np.where(diff>= th)
-
-    y2 = np.array(y)
-    y2[indices] = pred[indices]
-
-    k = repair_2(x,y2,debug=True)
+    #repair obvious errors
+    k = repair_1(x,y2)
+    #repair latest errors
+    k = repair_2(x,y2)
 
     return y2

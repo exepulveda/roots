@@ -1,18 +1,1 @@
-<<<<<<< HEAD
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/1.24.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/1.25.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/2.34.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/2.35.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/2.36.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/2.41.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/2.42.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/2.43.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/2.44.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/2.45.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/2.46.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/3.11.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/3.12.AVI
-/home/esepulveda/Dropbox/ap-es-projects/input_vm/3.13.AVI
-=======
-/Users/a1613915/Dropbox/alvaro-projects/input_vm/3.12.AVI 
->>>>>>> 62cc7d02358419c8b92af3487edb7ce9b46addec
+/Users/exequiel/Dropbox/ap-es-projects/input_vm/3.13.AVI

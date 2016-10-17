@@ -24,8 +24,12 @@ from utils import expand_folder
 
 from fixer import fix_prediction
 
-im_path = "/home/esepulveda/projects/roots/python/processing/1.25.AVI/accepted/"
-#im_path = "/Users/a1613915/repos/roots/python/processing/3.12.AVI/accepted" 
+#im_path = "/home/esepulveda/projects/roots/python/processing/1.25.AVI/accepted/"
+#im_path = "/Users/exequiel/projects/roots/python/processing/1.25.AVI/accepted"
+im_path = "/Users/exequiel/projects/roots/python/processing/3.11.AVI/accepted"
+
+
+#im_path = "/Users/a1613915/repos/roots/python/processing/3.13.AVI/accepted" 
 
 def lreg(x,y, th):
 	from sklearn import linear_model
@@ -122,8 +126,8 @@ if not os.path.exists("x.npy"):
 	x = [e[0] for e in image_ids]
 
 
-	templates = load_templates("/home/esepulveda/Documents/projects/roots/python/models/templates")
-	#templates = load_templates("/Users/a1613915/repos/roots/python/models/templates")
+	#templates = load_templates("/home/esepulveda/Documents/projects/roots/python/models/templates")
+	templates = load_templates("/Users/exequiel/projects/roots/python/models/templates")
 
 	n = len(x)
 
@@ -227,7 +231,7 @@ def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
 y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=2,debug=False)
 
 k = repair_1(x,y2)
-k = repair_2(x,y2)
+#k = repair_2(x,y2)
 
 # save assignment
 image_list = []
