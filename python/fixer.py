@@ -99,6 +99,8 @@ def fix_prediction(images_numbers, predictions):
         if y[i] == 7:
             i_start = i
             break
+    th = 6
+    
 
     i_end = n-1
     for i in xrange(n-1,0,-1):
@@ -116,18 +118,16 @@ def fix_prediction(images_numbers, predictions):
     pred = np.array(y)
     pred[i_start:i_end] = pred_ori
 
-    pred = np.int32(np.clip(np.round(pred),6,54))
+    pred = np.int32(np.clip(pred,th,54))
 
     #difference
     diff = np.abs(y-pred)
     #find higher
-    indices = np.where(diff> 4)
+    indices = np.where(diff>= th)
 
     y2 = np.array(y)
     y2[indices] = pred[indices]
 
     k = repair_2(x,y2,debug=True)
-    #k = repair_1(x,y2)
-    #print k
 
     return y2

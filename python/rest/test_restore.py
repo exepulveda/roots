@@ -4,10 +4,15 @@ from winframe import *
 
 # Set input and output paths
 <<<<<<< HEAD
+<<<<<<< HEAD
 DATA_PATH = '/home/esepulveda/Documents/projects/roots/python/processing/1.25.AVI/windows/frame-50/' 
 =======
 DATA_PATH = '/Users/a1613915/Dropbox/alvaro-projects/selection-wrong/1.25/windows/frame-29/' 
 >>>>>>> 404ce3cbe4fce89a15da17c55c0227f718f0b06e
+=======
+DATA_PATH = '/Users/a1613915/Dropbox/alvaro-projects/selection-wrong/1.25/windows/frame-50/' 
+
+>>>>>>> 62cc7d02358419c8b92af3487edb7ce9b46addec
 OUT_PATH = 'results'
 
 # Create output dir
@@ -29,6 +34,10 @@ for framename in [DATA_PATH]:
     numOfImages=len(inames)
     images = [cv2.imread(inames[i]) for i in range(numOfImages)]
 
+<<<<<<< HEAD
+=======
+    wf = winframe(images)
+>>>>>>> 62cc7d02358419c8b92af3487edb7ce9b46addec
 
     # Find the best windows frame
     wf = winframe(images,debug=True)
