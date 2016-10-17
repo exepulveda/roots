@@ -3,7 +3,11 @@ from restore import *
 from winframe import *
 
 # Set input and output paths
+<<<<<<< HEAD
 DATA_PATH = '/home/esepulveda/Documents/projects/roots/python/processing/1.25.AVI/windows/frame-50/' 
+=======
+DATA_PATH = '/Users/a1613915/Dropbox/alvaro-projects/selection-wrong/1.25/windows/frame-29/' 
+>>>>>>> 404ce3cbe4fce89a15da17c55c0227f718f0b06e
 OUT_PATH = 'results'
 
 # Create output dir
