@@ -155,7 +155,7 @@ def fix_prediction(images_numbers, predictions):
     k = repair_1(x,y)
 
     #repair outliers
-    y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=2,debug=False)
+    y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=4,debug=False)
     
     
     #repair obvious errors

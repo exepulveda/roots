@@ -26,10 +26,10 @@ from fixer import fix_prediction
 
 #im_path = "/home/esepulveda/projects/roots/python/processing/1.25.AVI/accepted/"
 #im_path = "/Users/exequiel/projects/roots/python/processing/1.25.AVI/accepted"
-im_path = "/Users/exequiel/projects/roots/python/processing/3.11.AVI/accepted"
+im_path = "/Users/exequiel/projects/roots/python/processing/1.14.AVI/accepted"
 
 
-#im_path = "/Users/a1613915/repos/roots/python/processing/3.13.AVI/accepted" 
+#im_path = "/Users/a1613915/repos/roots/python/processing/1.14.AVI/accepted" 
 
 def lreg(x,y, th):
 	from sklearn import linear_model
@@ -228,7 +228,7 @@ def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
     return y
 
 
-y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=2,debug=False)
+y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=4,debug=False)
 
 k = repair_1(x,y2)
 #k = repair_2(x,y2)
