@@ -1,13 +1,13 @@
 import os.path 
 import numpy as np
 
-def lreg(x,y):
-    #execute a robust linear regression isong RANSAC method
+def lreg(x,y, th):
+    #execute a robust linear regression using RANSAC method
     from sklearn import linear_model
     model = linear_model.LinearRegression()
     model.fit(x, y)
 
-    model_ransac = linear_model.RANSACRegressor(linear_model.LinearRegression())
+    model_ransac = linear_model.RANSACRegressor(linear_model.LinearRegression(),residual_threshold=th)
     model_ransac.fit(x, y)
 
     return model_ransac
@@ -83,6 +83,7 @@ def repair_2(x,y,debug=False):
     return k
 
 def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
+    n = len(x)
     X = x.reshape((n,1))
     y = np.array(y_original)
 
