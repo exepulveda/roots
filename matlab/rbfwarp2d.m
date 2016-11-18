@@ -74,7 +74,19 @@ L = [K,P;P',zeros(3,3)];
 %      0,0]; (n+3)x2
 Y = [ps;zeros(3,2)];
 %w = inv(L)*Y;
+
+c = cond(L)
+
+
 w = L\Y;
+
+w2 = linsolve(L,Y)
+
+csvwrite('w2.csv',w2);
+csvwrite('L.csv',L);
+csvwrite('Y.csv',Y);
+csvwrite('w.csv',w);
+
 
 %% Using w
 [x,y] = meshgrid(1:imw,1:imh);
@@ -92,17 +104,43 @@ elseif( strcmpi(method,'t') )
     Kp = ThinPlate(Kp);    
 end
 
-L = [Kp,ones(nump,1),pt];
-ptall = L*w;
+L2 = [Kp,ones(nump,1),pt];
+ptall = L2*w;
+
+%csvwrite('L.csv',ret);
 
 %reshape to 2d image
-xd = reshape( ptall(:,1),imh,imw );
-yd = reshape( ptall(:,2),imh,imw );
+%xd = reshape( ptall(:,1),imh,imw );
+%yd = reshape( ptall(:,2),imh,imw );
+
+csvwrite('im.csv',im(:,:,1));
+csvwrite('ptall.csv',ptall);
+
 
 for i = 1:imc
-    imt= interp2( single(im(:,:,i)),xd,yd,'linear');
-    imo(:,:,i) = uint8(imt);
+    imt= interp2( single(im(:,:,i)),ptall(:,1),ptall(:,2),'linear');
+    imo(:,:,i) = reshape(uint8(imt),imh,imw);
 end
+
+
+mask = ~isnan(imt);
+
+%ret = zeros(imh*imh,6);
+%m = 1;
+%for i = 1:imc
+%    for j=1:imh
+%        for k=1:imw
+%            imt= interp2( single(im(:,:,i)),xd(j,k),yd(j,k),'spline');
+%            ret(m,1) = j;
+%            ret(m,2) = k;
+%            ret(m,3) = xd(j,k);
+%            ret(m,4) = yd(j,k);
+%            ret(m,5) = im(j,k);
+%            ret(m,6) = imt;
+%            m = m +1;
+%        end
+%    end
+%end
 
 
 mask = ~isnan(imt);

@@ -24,9 +24,9 @@ from utils import expand_folder
 
 from fixer import fix_prediction
 
-#im_path = "/home/esepulveda/projects/roots/python/processing/1.25.AVI/accepted/"
+im_path = "/home/esepulveda/projects/roots/python/processing/1.16-20150828.AVI/accepted/"
 #im_path = "/Users/exequiel/projects/roots/python/processing/1.25.AVI/accepted"
-im_path = "/Users/exequiel/projects/roots/python/processing/1.14.AVI/accepted"
+#im_path = "/Users/exequiel/projects/roots/python/processing/1.16-20150828.AVI/accepted"
 
 
 #im_path = "/Users/a1613915/repos/roots/python/processing/1.14.AVI/accepted" 
@@ -109,40 +109,41 @@ def repair_2(x,y,debug=False):
     return k
 
 
-if not os.path.exists("x.npy"):
-	image_list = []
-	expand_folder(im_path,image_list)
-	image_list.sort()
+if True or not os.path.exists("x.npy"):
+    print ("im_path",im_path)
+    image_list = []
+    expand_folder(im_path,image_list)
+    image_list.sort()
 
-	image_ids = []
-	for image_name in image_list:
-		fname, extension = os.path.splitext( os.path.basename(image_name))
-		print (fname, extension)
-		image_ids += [(int(fname),image_name)]
+    image_ids = []
+    for image_name in image_list:
+        fname, extension = os.path.splitext( os.path.basename(image_name))
+        print (fname, extension)
+        image_ids += [(int(fname),image_name)]
 
-	image_ids.sort()
+    image_ids.sort()
 
-	image_list = [e[1] for e in image_ids]
-	x = [e[0] for e in image_ids]
+    image_list = [e[1] for e in image_ids]
+    x = [e[0] for e in image_ids]
 
 
-	#templates = load_templates("/home/esepulveda/Documents/projects/roots/python/models/templates")
-	templates = load_templates("/Users/exequiel/projects/roots/python/models/templates")
+    templates = load_templates("/home/esepulveda/Documents/projects/roots/python/models/templates")
+    #templates = load_templates("/Users/exequiel/projects/roots/python/models/templates")
 
-	n = len(x)
+    n = len(x)
 
-	ret = np.empty((n,54-6+1))
-	y = []
-	for i,im in enumerate(image_list):
-		#print i,im
-		prediction = predict(im,templates,debug=False)
-		y += [prediction if prediction else 0]
+    ret = np.empty((n,54-6+1))
+    y = []
+    for i,im in enumerate(image_list):
+        #print i,im
+        prediction = predict(im,templates,debug=False)
+        y += [prediction if prediction else 0]
 
-	x = np.int32(x)
-	y = np.int32(y)
+    x = np.int32(x)
+    y = np.int32(y)
 
-	np.save("x",x)
-	np.save("y",y)
+    np.save("x",x)
+    np.save("y",y)
 else:
 	x = np.load("x.npy")
 	y = np.load("y.npy")
@@ -227,6 +228,8 @@ def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
     y = np.int32(np.round(y))
     return y
 
+
+print x.shape
 
 y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=4,debug=False)
 
