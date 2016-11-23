@@ -6,7 +6,7 @@ from morphing import Morpher
 
 import matplotlib.pyplot as plt
 
-image_filename = '../matlab/im.tiff'
+image_filename = '../matlab/im.jpg'
 
 #load correspondences 
 ps = np.loadtxt('../matlab/ps.txt',delimiter=","); # image points
@@ -15,17 +15,17 @@ pd = np.loadtxt('../matlab/pd.txt',delimiter=","); # reference points
 original = cv2.imread(image_filename)
 im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
-mor = Morpher(ps-1, pd-1,regularization=100.0,subsampling_factor=1.0)
-rect = mor.interpolate(im)
-plt.imshow(rect,cmap='Greys_r')
-plt.show()
+#mor = Morpher(ps-1, pd-1,regularization=100.0,subsampling_factor=1.0)
+#rect = mor.interpolate(im)
+#plt.imshow(rect,cmap='Greys_r')
+#plt.show()
 
-quit()
+#quit()
 
 
-rect = homo(im, ps-1.0, pd-1.0)
+#rect = homo(im, ps-1.0, pd-1.0)
 
-quit()
+#quit()
 
 
 
@@ -35,7 +35,7 @@ quit()
 
 h,w = im.shape
 
-rectified = rbfwarp2d(im, ps, pd, method = "g",r=10*w)
+rectified = rbfwarp2d(im, ps, pd, method = "g",r=.5*w)
 #rectified = wrap(im, ps, pd)
 
 print rectified.shape

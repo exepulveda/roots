@@ -8,18 +8,18 @@ import scipy.linalg
 from skimage import transform as tf
 
 
-L = np.loadtxt('../matlab/L.csv',delimiter=","); # image points
-Y = np.loadtxt('../matlab/Y.csv',delimiter=","); # image points
-w2 = np.loadtxt('../matlab/w.csv',delimiter=","); # image points
+#L = np.loadtxt('../matlab/L.csv',delimiter=","); # image points
+#Y = np.loadtxt('../matlab/Y.csv',delimiter=","); # image points
+#w2 = np.loadtxt('../matlab/w.csv',delimiter=","); # image points
 
-lu = scipy.linalg.lu_factor(L)
-w = scipy.linalg.lu_solve(lu,Y)
+#lu = scipy.linalg.lu_factor(L)
+#w = scipy.linalg.lu_solve(lu,Y)
 
 #w = scipy.linalg.solve(L,Y)
 
-np.savetxt('../matlab/wp.csv',w,delimiter=",")
+#np.savetxt('../matlab/wp.csv',w,delimiter=",")
 
-quit()
+#quit()
 
 
 

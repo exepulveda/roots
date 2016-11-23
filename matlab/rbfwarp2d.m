@@ -75,7 +75,9 @@ L = [K,P;P',zeros(3,3)];
 Y = [ps;zeros(3,2)];
 %w = inv(L)*Y;
 
-c = cond(L)
+c = cond(L);
+fprintf('cond of L %f\n ', c)
+c
 
 
 w = L\Y;
@@ -86,6 +88,11 @@ csvwrite('w2.csv',w2);
 csvwrite('L.csv',L);
 csvwrite('Y.csv',Y);
 csvwrite('w.csv',w);
+
+save('L','L');
+save('Y','Y');
+save('w','w');
+
 
 
 %% Using w
