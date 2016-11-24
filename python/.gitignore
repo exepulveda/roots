@@ -1,0 +1,6 @@
+*.txt
+*.csv
+*.npy
+slurm*
+.~lock*
+*.mat
