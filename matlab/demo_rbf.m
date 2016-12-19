@@ -2,16 +2,9 @@ clear all
 close all
 
 addpath images
-
-imageName='7.jpg';
-%imageName='3.tiff';
-%imageName='4.tiff';
-%imageName='6.tiff';
-
-%imageName='2.tiff';
+imageName='1602.tiff';
 
 ds = 7;
-
 
 I_original = imread(imageName);
 
@@ -26,7 +19,6 @@ subplot(1,2,1)
 imshow(uint8(im))
 title('Orininal image with base landmarks');
 hold on
-
 
 
 %% Fit Circles
@@ -68,20 +60,18 @@ sCircle.c = sCircle.c + [0, (2/3)*h];
 sCircle.base = sCircle.base + repmat([0, (2/3)*h], 3,1);
 toc
 
-% Corners
-%%
+%% Corners
 imsize=[h,w];
-a = findcorner(wCircle, nCircle, imsize);
-b = findcorner(eCircle, nCircle, imsize);
-c = findcorner(eCircle, sCircle, imsize);
-d = findcorner(wCircle, sCircle, imsize);
+a = findcorner(wCircle, nCircle, [0 0]);
+b = findcorner(eCircle, nCircle, [w-1 0]);
+c = findcorner(eCircle, sCircle, [w-1 h-1]);
+d = findcorner(wCircle, sCircle, [0 h-1]);
 
 xN = linspace(0, w-1,ds );
 xS = linspace(0, w-1,ds );
 
 yW = linspace(0, h-1,ds );
 yE = linspace(0, h-1,ds );
-
 
 plot_circle(nCircle.c, nCircle.r);
 plot(nCircle.base(:,1), nCircle.base(:,2), '*b')
@@ -122,7 +112,6 @@ ptsW(:,1) = circevaly(ptsW(:,2), wCircle, imsize);
 ptsE(:,2) = linspace(b(2), c(2), ds);
 ptsE(:,1) = circevaly(ptsE(:,2), eCircle, imsize);
 
-
 plot(ptsN(:,1), ptsN(:,2), 'oy');
 plot(ptsS(:,1), ptsS(:,2), 'oy');
 plot(ptsW(:,1), ptsW(:,2), 'oy');
@@ -137,11 +126,9 @@ pd =1+[xN(2:end-1)',       zeros(ds-2,1)
 
 ps = [ptsN(2:end-1,:); ptsS(2:end-1,:); ptsW; ptsE];
 
-
 % Thin plate warping
 %[imo1,mask1] = rbfwarp2d( im, ps, pd,'thin');
-[imo1,mask1] = rbfwarp2d( im, ps, pd,'gau',10*w);
-
+[imo1,mask1] = rbfwarp2d( im, ps, pd,'gau',.5*w);
 
 subplot(1,2,2)
 imshow(uint8(imo1));

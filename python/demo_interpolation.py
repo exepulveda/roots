@@ -6,7 +6,7 @@ from morphing import Morpher
 
 import matplotlib.pyplot as plt
 
-image_filename = '../matlab/im.jpg'
+image_filename = '../matlab/im.tiff'
 
 #load correspondences 
 ps = np.loadtxt('../matlab/ps.txt',delimiter=","); # image points
@@ -35,7 +35,7 @@ im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
 h,w = im.shape
 
-rectified = rbfwarp2d(im, ps, pd, method = "g",r=.5*w)
+rectified = rbfwarp2d(im, ps, pd, method = "g",r=10*w)
 #rectified = wrap(im, ps, pd)
 
 print rectified.shape

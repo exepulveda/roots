@@ -1,26 +1,22 @@
 import numpy as np
-
 from scipy.interpolate import RectBivariateSpline
-from scipy.interpolate import interp2d
-
 import scipy.linalg
-
-from skimage import transform as tf
-
 import cv2
 
-def homo(im,ps,pd):
-    h, status = cv2.findHomography(ps, pd)
-    print h,status
-    im_out = cv2.warpPerspective(im, h, (im.shape[1],im.shape[0]))
-    #im_dst = cv2.warpPerspective(im, h, size)
-    return im_out
-    
-def wrap(im,ps,pd):
-    
-    return tf.warp(im,ps,pd)
 
-def rbfwarp2d(im, ps, pd, method = "g",r=None):
+def homo(im, ps, pd):
+    h, status = cv2.findHomography(ps, pd)
+    print h, status
+    im_out = cv2.warpPerspective(im, h, (im.shape[1], im.shape[0]))
+    # im_dst = cv2.warpPerspective(im, h, size)
+    return im_out
+
+
+def wrap(im, ps, pd):
+    return tf.warp(im, ps, pd)
+
+
+def rbfwarp2d(im, ps, pd, method="g", r=None):
     """function [imo,mask] = rbfwarp2d( im, ps, pd, varargin )
     % Radial base function/Thin-plate spline 2D image warping.
     % [imo,mask] = rbfwarp2d( im, ps, pd, method)
@@ -46,195 +42,102 @@ def rbfwarp2d(im, ps, pd, method = "g",r=None):
 
     # initialize default parameters
     if len(im.shape) >= 3:
-        imh,imw,imc = im.shape
+        imh, imw, imc = im.shape
     else:
-        imh,imw = im.shape
+        imh, imw = im.shape
         imc = 1
-        
-    if r is None:
-        r = 0.1*imw
-        
-    print 'imh, imw, imc = ', imh,imw,imc
-    
-    imo = np.zeros((imh,imw,imc))
-    #mask = np.zeros((imh,imw))
 
-    #%% Training w with L
+    if r is None:
+        r = 0.1 * imw
+
+    # imo = np.zeros((imh, imw, imc))
+    # mask = np.zeros((imh,imw))
+
+    # %% Training w with L
     nump = len(pd)
     num_center = len(ps)
-    K=np.zeros((nump,num_center))
+    K = np.zeros((nump, num_center))
 
     for i in xrange(num_center):
-        #Inverse warping from destination!
-        #dx = np.ones(nump,1)*ps(i,:)-pd; 
-        dx = np.empty((nump,2))
-        dx[:,0] = ps[i,0]
-        dx[:,1] = ps[i,1]
-        dx = dx - pd
+        # Inverse warping from destination!
+        # dx = np.ones(nump,1)*ps(i,:)-pd;
+        dx = np.empty((nump, 2))
+        dx[:, 0] = ps[i, 0]
+        dx[:, 1] = ps[i, 1]
+        dx -= pd
 
-        K[:,i] = np.sum(dx**2,axis=1)
+        K[:, i] = np.sum(dx ** 2, axis=1)
 
     if method == "g":
-        K = rbf(K,r)
+        K = rbf(K, r)
     elif method == "t":
         K = ThinPlate(K)
 
-
-
-    #% P = [1,xp,yp] where (xp,yp) are n landmark points (nx2)
-    #P[0, = [ones(num_center,1),pd];
+    # % P = [1,xp,yp] where (xp,yp) are n landmark points (nx2)
+    # P[0, = [ones(num_center,1),pd];
 
     print "nump num_center ", nump, num_center
-    P = np.ones((num_center,3))
-    P[:,1:] = pd[:,:]
-    
-    #for i in xrange(nump):
-    #    print i,P[i,:]
-        
-    #quit()
-    #print "P",P
-    # L = [ K  P;
-    #       P' 0 ]
-    #L = [K,P;P',zeros(3,3)];
-    
-    L = np.bmat([[K,P] ,[P.T,np.zeros((3,3))]]) 
+    P = np.ones((num_center, 3))
+    P[:, 1:] = pd[:, :]
 
-    
-    print "type L ", type(L[0,0])
-    #for i in xrange(len(L)):
-    #    print i,L[i,:]
-    #print L.shape
-    #print "L",L
-    #quit()
+    L = np.bmat([[K, P], [P.T, np.zeros((3, 3))]])
 
-
-    
     # Y = [x,y;
     #      0,0]; (n+3)x2
-    Y = np.r_[ps,np.zeros((3,2))]
-    print "type Y ", type(Y[0,0])
+    Y = np.r_[ps, np.zeros((3, 2))]
+    w = scipy.linalg.solve(L, Y)
 
-    #Y = np.bmat([[ps,P] ,[P.T,np.zeros((3,3))]])
-    #w = np.inv(L)*Y;
-    #for i in xrange(len(Y)):
-    #    print i,Y[i,:]
+    # Using w
+    [x, y] = np.meshgrid(np.arange(imw) + 1, np.arange(imh) + 1)
+    # pt = [x(:), y(:)]; #column concat
 
-    print "Y.shape", Y.shape
-    np.savetxt("L.csv",L)
-    np.savetxt("Y.csv",Y)
-    
-
-    #w = np.linalg.solve(L,Y)
-    #w = scipy.linalg.solve(L, Y)
-    #w = np.linalg.lstsq(L, Y)
-    #w = w[0]
-    #print " w ", w
-
-    #np.savetxt("w.csv",w)
-
-    w = np.loadtxt("../matlab/w.csv", delimiter=",")
-    
-    #w = np.dot(np.linalg.inv(L),Y)
-
-
-
-    #%% Using w
-    [x,y] = np.meshgrid(np.arange(imw)+1,np.arange(imh)+1)
-    #pt = [x(:), y(:)]; #column concat
-
-    
-
-    pt = np.c_[x.flatten(order='F'),y.flatten(order='F')]
-    
-
-
+    pt = np.c_[x.flatten(order='F'), y.flatten(order='F')]
 
     nump = len(pt)
-    Kp = np.zeros((nump,num_center))
+    Kp = np.zeros((nump, num_center))
     for i in xrange(num_center):
-        #dx = np.linalg.dot(np.ones(nump),ps[i,:])-pt  #(56,2)
-        dx = np.empty((nump,2))
-        dx[:,0] = ps[i,0]
-        dx[:,1] = ps[i,1]
+        # dx = np.linalg.dot(np.ones(nump),ps[i,:])-pt  #(56,2)
+        dx = np.empty((nump, 2))
+        dx[:, 0] = ps[i, 0]
+        dx[:, 1] = ps[i, 1]
         dx = dx - pt
-        Kp[:,i] = np.sum(dx**2,axis=1)
+        Kp[:, i] = np.sum(dx ** 2, axis=1)
 
     if method == "g":
-        Kp = rbf(Kp,r)
+        Kp = rbf(Kp, r)
     elif method == "t":
         Kp = ThinPlate(Kp)
 
-    print "method",method
-    np.savetxt("Kp.csv",Kp)
+    L2 = np.c_[Kp, np.ones(nump), pt]
 
+    ptall = np.dot(L2, w)
 
-    L2 = np.c_[Kp,np.ones(nump),pt]
+    # reshape to 2d image
+    xd = ptall[:, 0].reshape((imh, imw), order="F")
+    yd = ptall[:, 1].reshape((imh, imw), order="F")
 
-    ptall = np.dot(L2,w)
-
-
-    #reshape to 2d image
-    xd = ptall[:,0].reshape((imh,imw),order="F")
-    yd = ptall[:,1].reshape((imh,imw),order="F")
-    
     if imc > 1:
-        rect = np.empty((imh,imw,imc))
+        rect = np.empty((imh, imw, imc))
         for i in xrange(imc):
-            interpoler= RectBivariateSpline(np.arange(imw),np.arange(imh),im[:,:,i])
-            imt = interpoler(xd,yd,grid=False)
-
-            rect[:,:,i] = imt.reshape((imh,imw),order="C")
+            interpoler = RectBivariateSpline(np.arange(imh), np.arange(imw), im[:, :, i])
+            imt = interpoler(yd, xd, grid=False)
+            rect[:, :, i] = imt.reshape((imh, imw))
 
     else:
-        rect = np.empty((imw,imh))
-        print imh,imw,im.shape
-        print "creating interp2d"
-        #f = interp2d(np.arange(imw),np.arange(imh),im[:,:],copy=False)
-        
-        #print "evaluating interp2d"
-        #imt = f(xd,yd)
-        
-        #im = np.float32(im)
-        
-        interpoler= RectBivariateSpline(np.arange(imh)+1,np.arange(imw)+1,im)
+        interpoler = RectBivariateSpline(np.arange(imh), np.arange(imw), im)
+        imt = interpoler(yd, xd, grid=False)
+        rect = imt.reshape((imh, imw))
 
-        ret = np.empty(imh*imw)
-
-
-        i = 0
-        for j in xrange(imh):
-            for k in xrange(imw):
-                imt = interpoler(yd[j,k],xd[j,k],grid=False)
-                #print j+1,k+1,yd[j,k],xd[j,k],imt,im[j,k]
-                ret[i] = imt
-                i=i+1
-
-
-        # por que order="F" ??? 
-        rect = ret.reshape((imh,imw))
-        #imt = interpoler(xd,yd,grid=False)
-        #for i in xrange(10):
-        #    imt = interpoler(xd[i],yd[i],grid=False)
-        #    print i,xd[i],yd[i],imt
-
-        #quit()
-        #print interpoler(8.0,18.0,grid=False)
-        #print interpoler(18.0,8.0,grid=False)
-        #quit()
-        #imt = interp2( single(im(:,:,i)),xd,yd,'linear');
-        #f = interpolate.interp2d(x, y, z, kind='cubic')
-        
-        #imo[:,:,i] = imt
-        #rect = imt.reshape((imh,imw),order="F")
-    
-        
+    rect = cv2.convertScaleAbs(rect)
+    #cv2.xphoto.balanceWhite(rect, rect, cv2.xphoto.WHITE_BALANCE_SIMPLE)
     return rect
-    
 
-def rbf(d,r):
-    return np.exp(-d/(r**2))
+
+def rbf(d, r):
+    return np.exp(-d / (r ** 2))
+
 
 def ThinPlate(ri):
     r1i = ri
-    #r1i((ri==0))=realmin; % Avoid log(0)=inf
-    return ri*np.log(r1i)
+    # r1i((ri==0))=realmin; % Avoid log(0)=inf
+    return ri * np.log(r1i)

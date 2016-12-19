@@ -20,6 +20,8 @@ from rest.find_best_window import select_and_restore
 import bound
 from fixer import fix_prediction
 
+from rectify import rectify
+
 parser = argparse.ArgumentParser(description='Performe binary classifiacion of a new video')
 parser.add_argument('-l','--listfile', type=str,help='the filename of list of all videos to process',required=True)
 parser.add_argument('--verbose', help='output debug info',default=False,action='store_true',required=False)
@@ -228,7 +230,44 @@ def window_classification(video,video_status,configuration):
             logging.info("STEP 3: there are not windows to classify...")
     else:
         logging.info("STEP 3: window classification skipped...")
-    
+
+
+def rectification(video, video_status, configuration):
+    selected_folder = os.path.join(video_folder, "selected")
+    rectified_folder = os.path.join(video_folder, "rectified")
+
+    # target_w = configuration.window.image_width
+
+    if video_status.get("window_rectification", False):
+        logging.info("STEP 5: rectification skipped...")
+        return
+
+    logging.info("STEP 5: rectifying selected images...")
+
+    # delete rectified_folder
+    if os.path.exists(rectified_folder):
+        shutil.rmtree(rectified_folder)
+
+    os.mkdir(rectified_folder)
+
+    image_list = []
+    utils.expand_folder(selected_folder, image_list)
+
+    if len(image_list) == 0:
+        logging.info("STEP 5: there are not windows to rectify...")
+        return
+
+    for image_name in image_list:
+
+        im = cv2.imread(image_name)
+        rectified, circles, matches = rectify(im)
+
+        filename, extension = os.path.splitext(os.path.basename(image_name))
+        cv2.imwrite((os.path.join(rectified_folder, "{}_rect{}".format(filename, extension))), rectified)
+
+    video_status["window_rectification"] = True
+    config.save_video_status(video_folder, video_status)
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -238,12 +277,10 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.INFO)
 
-
     if not os.path.exists(args.listfile):
         raise Exception("Video list does not exist")
 
     logging.info("Processing video list: %s",args.listfile)
-    
     
     fin = open(args.listfile, "r")
     
@@ -290,18 +327,21 @@ if __name__ == "__main__":
                     
                     logging.info("For window {0}, accepted images: {1}".format(i,len(image_list)))
                     if len(image_list) > 0:
-                        #apply rectification
+                        # apply rectification
                         destination = os.path.join(selected_folder,"frame-{0}.{1}".format(i,configuration.extension))
-                        #copy best window image
+                        # copy best window image
                         select_and_restore(image_list,destination,configuration)
                     else:
                         empty_windows += [i]                
 
                 video_status["window_selection"] = True
-                config.save_video_status(video_folder,video_status)
+                config.save_video_status(video_folder, video_status)
 
             else:
                 logging.info("STEP 4: window selection skipped...")
+
+            # STEP 5: rectification
+            rectification(video, video_status, configuration)
         else:
-            logging.info("Video [%s] does not exists",video)
-            
+            logging.info("Video [%s] does not exists", video)
+
