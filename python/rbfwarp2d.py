@@ -54,10 +54,10 @@ def rbfwarp2d(im, ps, pd, method = "g",r=None):
     if r is None:
         r = 0.1*imw
         
-    print imh,imw,imc
+    print 'imh, imw, imc = ', imh,imw,imc
     
     imo = np.zeros((imh,imw,imc))
-    mask = np.zeros((imh,imw))
+    #mask = np.zeros((imh,imw))
 
     #%% Training w with L
     nump = len(pd)
@@ -72,7 +72,6 @@ def rbfwarp2d(im, ps, pd, method = "g",r=None):
         dx[:,1] = ps[i,1]
         dx = dx - pd
 
-
         K[:,i] = np.sum(dx**2,axis=1)
 
     if method == "g":
@@ -84,7 +83,9 @@ def rbfwarp2d(im, ps, pd, method = "g",r=None):
 
     #% P = [1,xp,yp] where (xp,yp) are n landmark points (nx2)
     #P[0, = [ones(num_center,1),pd];
-    P = np.ones((nump,3))
+
+    print "nump num_center ", nump, num_center
+    P = np.ones((num_center,3))
     P[:,1:] = pd[:,:]
     
     #for i in xrange(nump):
@@ -96,8 +97,10 @@ def rbfwarp2d(im, ps, pd, method = "g",r=None):
     #       P' 0 ]
     #L = [K,P;P',zeros(3,3)];
     
-    L = np.bmat([[K,P] ,[P.T,np.zeros((3,3))]])
+    L = np.bmat([[K,P] ,[P.T,np.zeros((3,3))]]) 
+
     
+    print "type L ", type(L[0,0])
     #for i in xrange(len(L)):
     #    print i,L[i,:]
     #print L.shape
@@ -109,18 +112,27 @@ def rbfwarp2d(im, ps, pd, method = "g",r=None):
     # Y = [x,y;
     #      0,0]; (n+3)x2
     Y = np.r_[ps,np.zeros((3,2))]
+    print "type Y ", type(Y[0,0])
+
     #Y = np.bmat([[ps,P] ,[P.T,np.zeros((3,3))]])
     #w = np.inv(L)*Y;
     #for i in xrange(len(Y)):
     #    print i,Y[i,:]
 
+    print "Y.shape", Y.shape
     np.savetxt("L.csv",L)
     np.savetxt("Y.csv",Y)
-
+    
 
     #w = np.linalg.solve(L,Y)
-    w = scipy.linalg.solve(L, Y)
-    
+    #w = scipy.linalg.solve(L, Y)
+    #w = np.linalg.lstsq(L, Y)
+    #w = w[0]
+    #print " w ", w
+
+    #np.savetxt("w.csv",w)
+
+    w = np.loadtxt("../matlab/w.csv", delimiter=",")
     
     #w = np.dot(np.linalg.inv(L),Y)
 
@@ -182,11 +194,12 @@ def rbfwarp2d(im, ps, pd, method = "g",r=None):
         #print "evaluating interp2d"
         #imt = f(xd,yd)
         
-        im = np.float32(im)
+        #im = np.float32(im)
         
         interpoler= RectBivariateSpline(np.arange(imh)+1,np.arange(imw)+1,im)
 
         ret = np.empty(imh*imw)
+
 
         i = 0
         for j in xrange(imh):
@@ -197,7 +210,8 @@ def rbfwarp2d(im, ps, pd, method = "g",r=None):
                 i=i+1
 
 
-        rect = ret.reshape((imh,imw),order="F")
+        # por que order="F" ??? 
+        rect = ret.reshape((imh,imw))
         #imt = interpoler(xd,yd,grid=False)
         #for i in xrange(10):
         #    imt = interpoler(xd[i],yd[i],grid=False)

@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 *.pyc
 *.json
 *.h5
 *.AVI
 *.tar
 *.tar.gz
+=======
+*.DS_Store
+*.pyc
+.*
+!/.gitignore
+>>>>>>> 9d2dd3192c2102604c7eedf0cdcb2926b84a40ad

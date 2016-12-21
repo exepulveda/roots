@@ -3,14 +3,14 @@ close all
 
 addpath images
 
-%imageName='1.jpg';
+imageName='7.jpg';
 %imageName='3.tiff';
 %imageName='4.tiff';
-imageName='6.tiff';
+%imageName='6.tiff';
 
 %imageName='2.tiff';
 
-ds = 15;
+ds = 7;
 
 
 I_original = imread(imageName);

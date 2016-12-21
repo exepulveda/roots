@@ -210,7 +210,6 @@ class Morpher(object):
         
         plt.plot(xd,yd,"x-r")
         plt.show()
-        
 
         np.savetxt("xy.csv",np.c_[x,y])
         np.savetxt("mor.csv",mor)

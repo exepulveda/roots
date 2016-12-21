@@ -1,7 +1,7 @@
 clear all, close all
 
 % load image
-original = imread('im.tiff');
+original = imread('im.jpg');
 
 % load correspondences 
 ps = dlmread('ps.txt'); % image points
@@ -10,7 +10,7 @@ pd = dlmread('pd.txt'); % reference points
 % interpolate
 im = rgb2gray(original);
 w = size(im,2);
-rectified = rbfwarp2d( im, ps, pd,'gau',10*w);
+rectified = rbfwarp2d( im, ps, pd,'gau',.5*w);
 
 % plot
 subplot(1,2,1)
