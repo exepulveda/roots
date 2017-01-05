@@ -10,7 +10,6 @@ else % horisontal sampling
     minrad = w;
 end
 
-
 if verticalSampling % W E
     y = [h/6; h/2; 5*h/6];
     mu = (w/2)*[1 1 1]';
@@ -62,7 +61,6 @@ for i=1:800
            mu = y;
        end
 
-       
     end
 
 end
@@ -72,7 +70,6 @@ rad = best_rad;
 base = best_base;
 
 return
-
 
 
 function q = quality(im, centre, r) 

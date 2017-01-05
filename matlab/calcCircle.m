@@ -1,4 +1,4 @@
-function [centre radius] = calcCircle(pt1, pt2, pt3)
+function [centre, radius] = calcCircle(pt1, pt2, pt3)
 % calcCircle: Fit a circle to a set of 3 points
 %
 % Inputs:

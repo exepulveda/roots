@@ -1,10 +1,5 @@
 from __future__ import print_function
 
-import theano
-
-#theano.config.mode = 'FAST_COMPILE'
-#theano.config.linker = 'py'
-
 import utils
 import os
 import os.path

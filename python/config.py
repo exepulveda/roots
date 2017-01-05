@@ -41,6 +41,13 @@ configuration.window.end = 54
 configuration.restore = Dummy()
 configuration.restore.iterations = 30
 
+configuration.rectify = Dummy()
+configuration.rectify.image_width = 100
+configuration.rectify.image_height = 60
+#configuration.rectify.image_width = 384
+#configuration.rectify.image_height = 288
+
+
 configuration.roofly = Dummy()
 configuration.roofly.template = "EXPERIMENT_T{tube}_L{window}_{date}_{time}_{session}_CBD.{extension}"
 
