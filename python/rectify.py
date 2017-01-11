@@ -446,7 +446,7 @@ def main():
         ax.add_artist(artist)
 
     # image_filename = '../matlab/im.tiff'
-    image_filename = 'frame-52.tiff'
+    image_filename = 'frame-28.tiff'
     original = cv2.imread(image_filename)
     im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
