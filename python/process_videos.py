@@ -156,8 +156,7 @@ def window_classification(video,video_status,configuration):
         image_list = [x[1] for x in ss]
         image_numbers_list = [x[0] for x in ss]
 
-
-        #deleting window_folder
+        # deleting window_folder
         if os.path.exists(window_folder):
             shutil.rmtree(window_folder)
             
@@ -183,10 +182,9 @@ def window_classification(video,video_status,configuration):
             logging.info("STEP 3: performing matching template...")
             
             predictions = []
-            for k,image_name in enumerate(image_list):
+            for k, image_name in enumerate(image_list):
                 try:
-                    predicted_window = bound.predict(image_name,templates,debug=False)
-
+                    predicted_window = bound.predict(image_name, templates,debug=False)
                     
                     ok_mt += 1
 
@@ -261,10 +259,10 @@ def rectification(video, video_status, configuration):
         im = cv2.imread(image_name)
         rectified, circles, matches = rectify(im)
         
-        h,w,colors = im.shape
-        #check if resize is needed
+        h, w, colors = im.shape
+        # check if resize is needed
         if configuration.rectify.image_width != w or configuration.rectify.image_height != h:
-            rectified = cv2.resize(rectified,(configuration.rectify.image_width,configuration.rectify.image_height))
+            rectified = cv2.resize(rectified, (configuration.rectify.image_width, configuration.rectify.image_height))
 
         filename, extension = os.path.splitext(os.path.basename(image_name))
         cv2.imwrite((os.path.join(rectified_folder, "{}_rect{}".format(filename, extension))), rectified)

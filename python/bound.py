@@ -309,7 +309,6 @@ def predict_mode(image_name,templates,tw=44,th=28,min_w=24,debug=False):
     image = image[10:80,10:80]
     image = gaussian_filter(image, 1)
     
-    
     boxes = get_all_boxes(image,debug=debug)
     
     #predict all boxes
@@ -423,7 +422,7 @@ def predict(image_name,templates,tw=44,th=28,min_w=24,debug=False):
     for k,bb in bboxes.iteritems():
         if k == "a": #one_digit
             #tw = 44
-            #tw = 36             
+            #tw = 36
             tw = 32
             prediction,corr = prediction_box(image,templates,bb,tw,th,False,min_w=min_w,debug=debug,image_name=image_name)
             
@@ -483,8 +482,7 @@ def predict_all_window(image_name,templates,th=28,min_w=24,debug=False):
     image = cv2.imread(image_name)
     image = gaussian_filter(image, 1)
     image = image[5:100,5:100]
-    
-    
+
     bboxes = best_box(image,debug=debug)
     nboxes = len(bboxes)
     
@@ -537,7 +535,6 @@ def predict_all_window(image_name,templates,th=28,min_w=24,debug=False):
             selection = image[y:y+h,x:x+w]
             selection = rgb2gray(selection)  
             ret += match_all_window(selection,templates,min_w=min_w,is_two_digits=False,debug=debug)
-            
             
             tw = 44
             tb = get_target_bounding_box(bb,tw,th)

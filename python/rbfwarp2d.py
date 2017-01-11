@@ -48,7 +48,7 @@ def rbfwarp2d(im, ps, pd, method="g", r=None):
         imc = 1
 
     if r is None:
-        r = 0.1 * imw
+        r = 0.1 * w
 
     # imo = np.zeros((imh, imw, imc))
     # mask = np.zeros((imh,imw))
@@ -76,7 +76,6 @@ def rbfwarp2d(im, ps, pd, method="g", r=None):
     # % P = [1,xp,yp] where (xp,yp) are n landmark points (nx2)
     # P[0, = [ones(num_center,1),pd];
 
-    #print "nump num_center ", nump, num_center
     P = np.ones((num_center, 3))
     P[:, 1:] = pd[:, :]
 

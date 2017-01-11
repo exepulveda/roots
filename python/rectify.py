@@ -88,6 +88,10 @@ class Circle:
         return Circle(centre, radius)
 
 
+class LineLocation:
+    N, S, W, E = range(4)
+
+
 def improfile(im, x, y):
     # remove nan values and cast to int
     idx = ~np.isnan(x) & ~np.isnan(y)
@@ -96,32 +100,56 @@ def improfile(im, x, y):
 
     # remove out of the image points
     h, w = im.shape
-    idx = np.logical_and(x >= 0, x < w)
-    x = x[idx]
-    y = y[idx]
-    idx = np.logical_and(y >= 0, y < h)
+    idx = (x >= 0) * (x < w) * (y >= 0) * (y < h)
     x = x[idx]
     y = y[idx]
 
     val = im[y, x].astype(np.double)
 
-    val **= 2
+    if val.shape[0] == 0:
+        return 0
+
+    val = sum(val) / (np.max([w, h, val.shape[0]]))
+    return val
+
+
+def improfile_north_line(im, x, y):
+    # remove nan values and cast to int
+    y_l = y + 5
+
+    idx = ~np.isnan(x) & ~np.isnan(y) & ~np.isnan(y_l)
+    x = x[idx].round().astype(np.int)
+    y = y[idx].round().astype(np.int)
+    y_l = y_l[idx].round().astype(np.int)
+
+    # remove out of the image points
+    h, w = im.shape
+    idx = (x >= 0) * (x < w) * (y >= 0) * (y < h) * (y_l >= 0) * (y_l < h)
+    x = x[idx]
+    y = y[idx]
+    y_l = y_l[idx]
+
+    val = im[y, x].astype(np.double)
+    val_l = im[y_l, x].astype(np.double)
+    val = val-val_l
+    # neg_values = val <= 0
+    # val **= 2
+    # val[neg_values] = -val[neg_values]
 
     if val.shape[0] == 0:
         return 0
 
     val = sum(val) / (np.max([w, h, val.shape[0]]))
-
     return val
 
 
-def quality(im, circle):
+def quality(im, circle, location):
     h, w = im.shape
 
     centre = circle.centre
     r = circle.radius
 
-    if h > w:  # W E
+    if location == LineLocation.W or location == LineLocation.E:
         yp = np.arange(h)
         xp = centre[0] + np.sqrt(r**2 - (yp - centre[1])**2)
 
@@ -130,24 +158,34 @@ def quality(im, circle):
         xp = centre[0] - np.sqrt(r**2 - (yp - centre[1])**2)
         val2 = improfile(im, xp, yp)
 
-    else:  # N S
+    elif location == LineLocation.N:
         xp = np.arange(w)
         yp = centre[1] + np.sqrt(r**2 - (xp - centre[0])**2)
 
-        val1 = improfile(im, xp, yp)
+        val1 = improfile_north_line(im, xp, yp)
 
         yp = centre[1] - np.sqrt(r**2 - (xp - centre[0])**2)
+        val2 = improfile_north_line(im, xp, yp)
+
+    else:  # S
+        xp = np.arange(w)
+        yp = centre[1] + np.sqrt(r ** 2 - (xp - centre[0]) ** 2)
+
+        val1 = improfile(im, xp, yp)
+
+        yp = centre[1] - np.sqrt(r ** 2 - (xp - centre[0]) ** 2)
         val2 = improfile(im, xp, yp)
 
     return max(val1, val2)
 
 
-def fit_circle(im):
+def fit_circle(im, location):
+    # np.random.seed(2)
 
     im = cv2.GaussianBlur(im, (0, 0), 3)
     h, w = im.shape
 
-    vertical_sampling = h > w
+    vertical_sampling = location == LineLocation.W or location == LineLocation.E
 
     if vertical_sampling:  # W E
         min_radius = 1.5 * h
@@ -167,6 +205,7 @@ def fit_circle(im):
     # Find a global initialisation
     i = 0
     while True:
+
         if vertical_sampling:  # W E
             x = w * np.random.rand(3)
         else:  # N S
@@ -180,7 +219,7 @@ def fit_circle(im):
         if rad < min_radius:
             continue
 
-        q = quality(im, circle)
+        q = quality(im, circle, location)
         if q > best_q:
             best_q = q
             best_circle = circle
@@ -190,6 +229,7 @@ def fit_circle(im):
 
         i += 1
 
+    # return best_circle
     # local refinement: kind of simulated annealing
 
     if vertical_sampling:  # W E
@@ -198,9 +238,10 @@ def fit_circle(im):
         mu = y
 
     i = 0
+    sigma_loc = .1*sigma
     while True:
 
-        dim_idx = i % 3 #np.random.randint(0, 3);
+        dim_idx = i % 3
         if vertical_sampling:  # W E
             x[dim_idx] = mu[dim_idx] + np.random.rand() * np.sqrt(sigma)
         else:  # N S
@@ -216,7 +257,7 @@ def fit_circle(im):
 
         sigma *= .99
 
-        q = quality(im, circle)
+        q = quality(im, circle, location)
 
         # Upgrade quality and sampling parametres
         if q > best_q:
@@ -226,16 +267,15 @@ def fit_circle(im):
             # upgrade mu and restart sigma
             if vertical_sampling:  # W E
                 mu = x
-                sigma = np.min([.5 * w, 10*sigma])
             else:  # % N S
                 mu = y
-                sigma = np.min([.5 * h, 10*sigma])
 
-        if sigma < .1:
+            sigma = sigma_loc
+
+        if sigma < .01:
             break
 
         i += 1
-
 
     return best_circle
 
@@ -318,14 +358,14 @@ def find_circles(im):
     im_n = im[:int((1 / 3.) * h), :]
     im_s = im[int((2 / 3.) * h):, :]
 
-    e = fit_circle(im_e)
+    e = fit_circle(im_e, LineLocation.E)
     e.centre += np.array([int((2 / 3.) * w), 0], np.int)
 
-    w = fit_circle(im_w)
+    w = fit_circle(im_w, LineLocation.W)
 
-    n = fit_circle(im_n)
+    n = fit_circle(im_n, LineLocation.N)
 
-    s = fit_circle(im_s)
+    s = fit_circle(im_s, LineLocation.S)
     s.centre += np.array([0, int((2 / 3.) * h)])
 
     return n, s, w, e
@@ -342,10 +382,10 @@ def find_corners(im, circle_n, circle_s, circle_w, circle_e):
     return a, b, c, d
 
 
-def rectify(original, ds=7, target_size=None):
-    '''Rectify a distortiend image (original) to a rectangle. Each edge is discretized in ds points
-    The rectified size can be target_size if is not None. If it is None same size as original
-    '''
+def rectify(original, ds=7):
+    # Rectify a distortiend image (original) to a rectangle. Each edge is discretised in ds points
+    # The rectified size can be target_size if is not None. If it is None same size as original
+
     im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
     h, w = im.shape
@@ -373,20 +413,12 @@ def rectify(original, ds=7, target_size=None):
     ptsE[:, 0] = circ_eval_y(ptsE[:, 1], circle_e, w)
 
     # N S W E
-    if target_size is None:
-        target_size = (h,w)
-    else:
-        assert len(target_size) == 2
-        assert target_size[0] > 0
-        assert target_size[1] > 0
-    
-    target_h, target_w = target_size
-    
-    xN = np.linspace(0, target_w-1, ds)
-    xS = np.linspace(0, target_w-1, ds)
 
-    yW = np.linspace(0, target_h-1, ds)
-    yE = np.linspace(0, target_h-1, ds)
+    xN = np.linspace(0, w-1, ds)
+    xS = np.linspace(0, w-1, ds)
+
+    yW = np.linspace(0, h-1, ds)
+    yE = np.linspace(0, h-1, ds)
 
     pd = np.array([xN[1:-1], np.zeros(ds-2)]).T
     pd = np.concatenate((pd, np.array([xS[1:-1], (h-1) * np.ones(ds-2)]).T))
@@ -404,6 +436,7 @@ def rectify(original, ds=7, target_size=None):
 
 
 def main():
+
     import matplotlib.pyplot as plt
 
     def plot_circle(circle):
@@ -412,7 +445,8 @@ def main():
         ax = fig.gca()
         ax.add_artist(artist)
 
-    image_filename = '../matlab/im.tiff'
+    # image_filename = '../matlab/im.tiff'
+    image_filename = 'frame-52.tiff'
     original = cv2.imread(image_filename)
     im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
