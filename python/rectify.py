@@ -98,13 +98,14 @@ def improfile(im, x, y):
     x = x[idx].round().astype(np.int)
     y = y[idx].round().astype(np.int)
 
-    # remove out of the image points
+    # remove points out of the image
     h, w = im.shape
     idx = (x >= 0) * (x < w) * (y >= 0) * (y < h)
     x = x[idx]
     y = y[idx]
 
-    val = im[y, x].astype(np.double)
+    coord = zip(y,x)
+    val = np.float32([im[i] for i in coord])
 
     if val.shape[0] == 0:
         return 0
@@ -159,13 +160,16 @@ def quality(im, circle, location):
         val2 = improfile(im, xp, yp)
 
     elif location == LineLocation.N:
-        xp = np.arange(w)
-        yp = centre[1] + np.sqrt(np.maximum(0,r**2 - (xp - centre[0])**2))
+        xmin = centre[0] - r
+        xmax = centre[0] + r
+        xp = np.arange(max(0,xmin), min(w,xmax))
+        #yp = centre[1] + np.sqrt(np.maximum(0, r**2 - (xp - centre[0])**2))
+        yp = centre[1] + np.sqrt(r ** 2 - (xp - centre[0]) ** 2)
+        val1 = improfile(im, xp, yp)
 
-        val1 = improfile_north_line(im, xp, yp)
-
-        yp = centre[1] - np.sqrt(np.maximum(0,r**2 - (xp - centre[0])**2))
-        val2 = improfile_north_line(im, xp, yp)
+        yp = centre[1] - np.sqrt(r**2 - (xp - centre[0])**2)
+        # val2 = improfile_north_line(im, xp, yp)
+        val2 = improfile(im, xp, yp)
 
     else:  # S
         xp = np.arange(w)
@@ -179,11 +183,12 @@ def quality(im, circle, location):
     return max(val1, val2)
 
 
-def fit_circle(im, location):
-    # np.random.seed(2)
+def fit_circle(im, location,debug=False):
 
     im = cv2.GaussianBlur(im, (0, 0), 3)
     h, w = im.shape
+
+    if debug: print "image shape",im.shape,"location",location
 
     vertical_sampling = location == LineLocation.W or location == LineLocation.E
 
@@ -211,6 +216,7 @@ def fit_circle(im, location):
         else:  # N S
             y = h * np.random.rand(3)
 
+        # points are columns
         base = np.array((x, y))
 
         circle = Circle.from_base(base)
@@ -220,16 +226,19 @@ def fit_circle(im, location):
             continue
 
         q = quality(im, circle, location)
+
+        if debug: print "iter",i,q,best_q
+
         if q > best_q:
             best_q = q
             best_circle = circle
 
-        if i > 1500:
+        if i > 500:
             break
 
         i += 1
 
-    # return best_circle
+    return best_circle
     # local refinement: kind of simulated annealing
 
     if vertical_sampling:  # W E
@@ -363,7 +372,7 @@ def find_circles(im):
 
     w = fit_circle(im_w, LineLocation.W)
 
-    n = fit_circle(im_n, LineLocation.N)
+    n = fit_circle(im_n, LineLocation.N, debug=True)
 
     s = fit_circle(im_s, LineLocation.S)
     s.centre += np.array([0, int((2 / 3.) * h)])
@@ -445,8 +454,11 @@ def main():
         ax = fig.gca()
         ax.add_artist(artist)
 
+
+    np.random.seed(2)
+
     # image_filename = '../matlab/im.tiff'
-    image_filename = 'frame-28.tiff'
+    image_filename = 'frame-48.tiff'
     original = cv2.imread(image_filename)
     im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
