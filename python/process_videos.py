@@ -25,6 +25,7 @@ parser = argparse.ArgumentParser(description='Performe binary classifiacion of a
 parser.add_argument('-l','--listfile', type=str,help='the filename of list of all videos to process',required=True)
 parser.add_argument('--verbose', help='output debug info',default=False,action='store_true',required=False)
 parser.add_argument('--force', help='restart from extraction',required=False,default=False,action='store_true')
+parser.add_argument('--rectifyonly', help='list of windows to rectify',required=False,default=[],type=int,nargs='*')
 
 def frames_extraction(video,video_status,configuration):
     video_folder = config.setup_video_folders(video,reset_folder=args.force)
@@ -229,23 +230,24 @@ def window_classification(video,video_status,configuration):
         logging.info("STEP 3: window classification skipped...")
 
 
-def rectification(video, video_status, configuration):
+def rectification(video, video_status, configuration,windows=[]):
     selected_folder = os.path.join(video_folder, "selected")
     rectified_folder = os.path.join(video_folder, "rectified")
 
     # target_w = configuration.window.image_width
 
-    if video_status.get("window_rectification", False):
+    if video_status.get("window_rectification", False) and len(windows) == 0:
         logging.info("STEP 5: rectification skipped...")
         return
 
     logging.info("STEP 5: rectifying selected images...")
 
     # delete rectified_folder
-    if os.path.exists(rectified_folder):
+    if os.path.exists(rectified_folder) and len(windows) == 0:
         shutil.rmtree(rectified_folder)
 
-    os.mkdir(rectified_folder)
+    if not os.path.exists(rectified_folder):
+        os.mkdir(rectified_folder)
 
     image_list = []
     utils.expand_folder(selected_folder, image_list)
@@ -253,19 +255,28 @@ def rectification(video, video_status, configuration):
     if len(image_list) == 0:
         logging.info("STEP 5: there are not windows to rectify...")
         return
+        
+    #seed number
+    np.random.seed(1634120)
 
     for image_name in image_list:
-
-        im = cv2.imread(image_name)
-        rectified, circles, matches = rectify(im)
-        
-        h, w, colors = im.shape
-        # check if resize is needed
-        if configuration.rectify.image_width != w or configuration.rectify.image_height != h:
-            rectified = cv2.resize(rectified, (configuration.rectify.image_width, configuration.rectify.image_height))
-
+        #extract window number from name
         filename, extension = os.path.splitext(os.path.basename(image_name))
-        cv2.imwrite((os.path.join(rectified_folder, "{}_rect{}".format(filename, extension))), rectified)
+        #filename = "frame-WINDOWS"
+        windows_in_image = int(filename.split("-")[1])
+        
+        if len(windows) == 0  or windows_in_image in windows:
+            print (image_name,windows_in_image)
+
+            im = cv2.imread(image_name)
+            rectified, circles, matches = rectify(im)
+            
+            h, w, colors = im.shape
+            # check if resize is needed
+            if configuration.rectify.image_width != w or configuration.rectify.image_height != h:
+                rectified = cv2.resize(rectified, (configuration.rectify.image_width, configuration.rectify.image_height))
+
+            cv2.imwrite((os.path.join(rectified_folder, "{}-rect{}".format(filename, extension))), rectified)
 
     video_status["window_rectification"] = True
     config.save_video_status(video_folder, video_status)
@@ -343,7 +354,7 @@ if __name__ == "__main__":
                 logging.info("STEP 4: window selection skipped...")
 
             # STEP 5: rectification
-            rectification(video, video_status, configuration)
+            rectification(video, video_status, configuration,windows=args.rectifyonly)
         else:
             logging.info("Video [%s] does not exists", video)
 

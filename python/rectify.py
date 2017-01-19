@@ -151,29 +151,29 @@ def quality(im, circle, location):
 
     if location == LineLocation.W or location == LineLocation.E:
         yp = np.arange(h)
-        xp = centre[0] + np.sqrt(r**2 - (yp - centre[1])**2)
+        xp = centre[0] + np.sqrt(np.maximum(0,r**2 - (yp - centre[1])**2))
 
         val1 = improfile(im, xp, yp)
 
-        xp = centre[0] - np.sqrt(r**2 - (yp - centre[1])**2)
+        xp = centre[0] - np.sqrt(np.maximum(0,r**2 - (yp - centre[1])**2))
         val2 = improfile(im, xp, yp)
 
     elif location == LineLocation.N:
         xp = np.arange(w)
-        yp = centre[1] + np.sqrt(r**2 - (xp - centre[0])**2)
+        yp = centre[1] + np.sqrt(np.maximum(0,r**2 - (xp - centre[0])**2))
 
         val1 = improfile_north_line(im, xp, yp)
 
-        yp = centre[1] - np.sqrt(r**2 - (xp - centre[0])**2)
+        yp = centre[1] - np.sqrt(np.maximum(0,r**2 - (xp - centre[0])**2))
         val2 = improfile_north_line(im, xp, yp)
 
     else:  # S
         xp = np.arange(w)
-        yp = centre[1] + np.sqrt(r ** 2 - (xp - centre[0]) ** 2)
+        yp = centre[1] + np.sqrt(np.maximum(0,r ** 2 - (xp - centre[0]) ** 2))
 
         val1 = improfile(im, xp, yp)
 
-        yp = centre[1] - np.sqrt(r ** 2 - (xp - centre[0]) ** 2)
+        yp = centre[1] - np.sqrt(np.maximum(0,r ** 2 - (xp - centre[0]) ** 2))
         val2 = improfile(im, xp, yp)
 
     return max(val1, val2)
