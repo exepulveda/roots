@@ -3,7 +3,7 @@ import time
 
 #see: https://en.wikipedia.org/wiki/Circumscribed_circle
 
-def center_vectorized(points):
+def circle_vectorized(points):
 	points_prima = points - points[0,:,:]
 	points_prima_squared = np.sum(points_prima**2,axis=1)
 	#print "points_prima.shape",points_prima.shape
@@ -21,9 +21,15 @@ def center_vectorized(points):
 
 	#print Up[:,:5]
 	
-	return Up + points[0,:,:]
+	centers = Up + points[0,:,:]
 	
-def center_loop(A,B,C):
+	#distance of centers to first point
+	diff = points[0,:,:] - centers
+	radii = np.sqrt(np.sum(diff**2,axis=0))
+	
+	return centers, radii
+	
+def circle_loop(A,B,C):
 	Ap = A-A
 	Bp = B-A
 	Cp = C-A
@@ -46,7 +52,11 @@ def center_loop(A,B,C):
 
 
 	U = Up + A
-	return U
+	
+	#distance of centers to first point
+	diff = A - U
+	radii = np.sqrt(np.sum(diff**2,axis=0))
+	return U, radii
 	
 if __name__ == "__main__":
 
@@ -55,13 +65,14 @@ if __name__ == "__main__":
 	points = np.random.random(size=(3,2,n)) * 100.0
 
 	centers_1 = np.empty((2,n))
+	radii_1 = np.empty(n)
 	t1 = time.time()
 
 	for i in range(n):
 		A = points[0,:,i]
 		B = points[1,:,i]
 		C = points[2,:,i]
-		centers_1[:,i] =center_loop(A,B,C)
+		centers_1[:,i],radii_1[i] =circle_loop(A,B,C)
 
 	t2 = time.time()
 	
@@ -70,7 +81,7 @@ if __name__ == "__main__":
 	print d1
 
 	t1 = time.time()
-	centers_2 = center_vectorized(points)
+	centers_2, radii_2 = circle_vectorized(points)
 	t2 = time.time()
 	
 	d2 = t2-t1
@@ -81,6 +92,7 @@ if __name__ == "__main__":
 	for i in range(n):
 		assert centers_1[0,i] == centers_2[0,i]
 		assert centers_1[1,i] == centers_2[1,i]
+		assert radii_1[i] == radii_2[i]
 
 	quit()
 	A = np.array([3.0,4.0])
