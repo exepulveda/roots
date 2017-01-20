@@ -93,10 +93,10 @@ class LineLocation:
 
 
 def improfile(im, x, y):
-    # remove nan values and cast to int
-    idx = ~np.isnan(x) & ~np.isnan(y)
-    x = x[idx].round().astype(np.int)
-    y = y[idx].round().astype(np.int)
+
+    # cast to int
+    x = x.round().astype(np.int)
+    y = y.round().astype(np.int)
 
     # remove points out of the image
     h, w = im.shape
@@ -110,37 +110,60 @@ def improfile(im, x, y):
     if val.shape[0] == 0:
         return 0
 
-    val = sum(val) / (np.max([w, h, val.shape[0]]))
+    val = np.sum(val) / (np.max([w, h, val.shape[0]]))
     return val
 
 
-def improfile_north_line(im, x, y):
+def improfile_a(im, x, y):
     # remove nan values and cast to int
-    y_l = y + 5
-
-    idx = ~np.isnan(x) & ~np.isnan(y) & ~np.isnan(y_l)
+    idx = ~np.isnan(x) & ~np.isnan(y)
     x = x[idx].round().astype(np.int)
     y = y[idx].round().astype(np.int)
-    y_l = y_l[idx].round().astype(np.int)
 
-    # remove out of the image points
+    # remove points out of the image
     h, w = im.shape
-    idx = (x >= 0) * (x < w) * (y >= 0) * (y < h) * (y_l >= 0) * (y_l < h)
+    idx = (x >= 0) * (x < w) * (y >= 0) * (y < h)
     x = x[idx]
     y = y[idx]
-    y_l = y_l[idx]
 
-    val = im[y, x].astype(np.double)
-    val_l = im[y_l, x].astype(np.double)
-    val = val-val_l
-    # neg_values = val <= 0
-    # val **= 2
-    # val[neg_values] = -val[neg_values]
+    coord = zip(y, x)
+    val = np.float32([im[i] for i in coord])
 
-    if val.shape[0] == 0:
-        return 0
+    val_bin = val>150
+    segment_len = 0
+    best_segment_len = 0
+    for i in range(len(val_bin)):
+        if val_bin[i]:
+            segment_len += 1
+        else:
+            best_segment_len = max(best_segment_len, segment_len)
+            segment_len = 0
 
-    val = sum(val) / (np.max([w, h, val.shape[0]]))
+    return best_segment_len
+
+
+
+def improfile_b(im, x, y):
+    # remove nan values and cast to int
+    # idx = ~np.isnan(x) & ~np.isnan(y)
+    #x = x[idx].round().astype(np.int)
+    #y = y[idx].round().astype(np.int)
+
+    x = x.round().astype(np.int)
+    y = y.round().astype(np.int)
+
+    # remove points out of the image
+    h, w = im.shape
+
+    val = 0.0
+
+    for i,ix in enumerate(x):
+        if ix >= 0 and ix < w:
+            iy_min = max(0,y[i] - 1)
+            iy_max = min(h,y[i] + 1)
+            #print 'iy_min, iy_max', iy_min, iy_max, ix
+            val += np.sum(im[iy_min:iy_max,ix])
+
     return val
 
 
@@ -150,21 +173,24 @@ def quality(im, circle, location):
     centre = circle.centre
     r = circle.radius
 
+    xmin = centre[0] - r
+    xmax = centre[0] + r
+
+    ymin = centre[1] - r
+    ymax = centre[1] + r
+
     if location == LineLocation.W or location == LineLocation.E:
-        yp = np.arange(h)
-        xp = centre[0] + np.sqrt(np.maximum(0,r**2 - (yp - centre[1])**2))
+        yp = np.arange(max(0, ymin), min(h, ymax))
+        xp = centre[0] + np.sqrt(r**2 - (yp - centre[1])**2)
 
         val1 = improfile(im, xp, yp)
 
-        xp = centre[0] - np.sqrt(np.maximum(0,r**2 - (yp - centre[1])**2))
+        xp = centre[0] - np.sqrt(r**2 - (yp - centre[1])**2)
         val2 = improfile(im, xp, yp)
 
     elif location == LineLocation.N:
-        xmin = centre[0] - r
-        xmax = centre[0] + r
-        xp = np.arange(max(0,xmin), min(w,xmax))
-        #yp = centre[1] + np.sqrt(np.maximum(0, r**2 - (xp - centre[0])**2))
-        yp = centre[1] + np.sqrt(r ** 2 - (xp - centre[0]) ** 2)
+        xp = np.arange(max(0, xmin), min(w, xmax))
+        yp = centre[1] + np.sqrt(r**2 - (xp - centre[0]) ** 2)
         val1 = improfile(im, xp, yp)
 
         yp = centre[1] - np.sqrt(r**2 - (xp - centre[0])**2)
@@ -172,12 +198,12 @@ def quality(im, circle, location):
         val2 = improfile(im, xp, yp)
 
     else:  # S
-        xp = np.arange(w)
-        yp = centre[1] + np.sqrt(np.maximum(0,r ** 2 - (xp - centre[0]) ** 2))
+        xp = np.arange(max(0, xmin), min(w, xmax))
+        yp = centre[1] + np.sqrt(r**2 - (xp - centre[0]) ** 2)
 
         val1 = improfile(im, xp, yp)
 
-        yp = centre[1] - np.sqrt(np.maximum(0,r ** 2 - (xp - centre[0]) ** 2))
+        yp = centre[1] - np.sqrt(r**2 - (xp - centre[0]) ** 2)
         val2 = improfile(im, xp, yp)
 
     return max(val1, val2)
@@ -185,7 +211,14 @@ def quality(im, circle, location):
 
 def fit_circle(im, location,debug=False):
 
-    im = cv2.GaussianBlur(im, (0, 0), 3)
+    #im = cv2.GaussianBlur(im, (0, 0), 3)
+
+    # im = cv2.Canny(im, 150, 250)
+
+
+    im = cv2.GaussianBlur(im, (7, 7), 2)
+    im = cv2.Canny(im, 50, 120)
+
     h, w = im.shape
 
     if debug: print "image shape",im.shape,"location",location
@@ -225,6 +258,12 @@ def fit_circle(im, location,debug=False):
         if rad < min_radius:
             continue
 
+        if location == LineLocation.W and circle.centre[0] <0:
+            continue
+
+        if location == LineLocation.E and circle.centre[0] >w:
+            continue
+
         q = quality(im, circle, location)
 
         if debug: print "iter",i,q,best_q
@@ -233,7 +272,7 @@ def fit_circle(im, location,debug=False):
             best_q = q
             best_circle = circle
 
-        if i > 500:
+        if i > 5000:
             break
 
         i += 1
@@ -247,7 +286,7 @@ def fit_circle(im, location,debug=False):
         mu = y
 
     i = 0
-    sigma_loc = .1*sigma
+    sigma_loc = sigma
     while True:
 
         dim_idx = i % 3
@@ -264,7 +303,7 @@ def fit_circle(im, location,debug=False):
         if rad < min_radius:
             continue
 
-        sigma *= .99
+        sigma -= .01
 
         q = quality(im, circle, location)
 
@@ -359,7 +398,8 @@ def circ_eval_y(x, circle, w):
         return x2
 
 
-def find_circles(im):
+def find_circles(im, line_offset=6):
+
     h, w = im.shape
 
     im_e = im[:, int((2 / 3.) * w):]
@@ -369,13 +409,17 @@ def find_circles(im):
 
     e = fit_circle(im_e, LineLocation.E)
     e.centre += np.array([int((2 / 3.) * w), 0], np.int)
+    e.centre[0] += line_offset
 
     w = fit_circle(im_w, LineLocation.W)
+    w.centre[0] -= line_offset
 
     n = fit_circle(im_n, LineLocation.N, debug=True)
+    n.centre[1] -= line_offset
 
     s = fit_circle(im_s, LineLocation.S)
     s.centre += np.array([0, int((2 / 3.) * h)])
+    s.centre[1] += line_offset
 
     return n, s, w, e
 
@@ -458,14 +502,45 @@ def main():
     np.random.seed(2)
 
     # image_filename = '../matlab/im.tiff'
-    image_filename = 'frame-48.tiff'
+    image_filename = 'frame-54.tiff'
     original = cv2.imread(image_filename)
     im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+
 
     rectified, circles, matches = rectify(original)
 
     plt.subplot(121)
+    #
+    # imCanny = cv2.GaussianBlur(im, (7, 7), 2)
+    # imCanny = cv2.Canny(imCanny, 50, 120)
+    #
+    #
+    # # Apply adaptiveThreshold at the bitwise_not of gray, notice the ~ symbol
+    #
+    # bw = cv2.adaptiveThreshold(im, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 2)
+
+    # horizontal = bw
+    # vertical = bw
+    #
+    #
+    # h, w = im.shape
+    #
+    # horizontalsize = h / 30
+    #
+    # # // Create structure element for extracting horizontal lines through morphology operations
+    # horizontalStructure = cv2.getStructuringElement(cv2.MORPH_RECT, (horizontalsize, 1))
+    #
+    # #// Apply morphology operations
+    # horizontal = cv2.erode(horizontal, horizontalStructure, (1, 1))
+    # horizontal = cv2.dilate(horizontal, horizontalStructure, (1, 1))
+    #
     plt.imshow(im, cmap='Greys_r')
+
+    # plt.imshow(bw, cmap='Greys_r')
+    #
+    # plt.show()
+    # quit()
+
 
     plot_circle(circles['north'])
     plot_circle(circles['west'])
