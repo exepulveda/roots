@@ -88,6 +88,38 @@ class Circle:
         return Circle(centre, radius)
 
 
+def circle_vectorized(points):
+
+    n = points.shape[2]
+
+    points_prima = points - points[0, :, :]
+    points_prima_squared = np.sum(points_prima ** 2, axis=1)
+    # print "points_prima.shape",points_prima.shape
+    # print "points_prima_squared.shape",points_prima_squared.shape
+
+    Dp = 2 * (points_prima[1, 0] * points_prima[2, 1] - points_prima[1, 1] * points_prima[2, 0])
+    # print "Dp.shape",Dp.shape
+
+    # print "points_prima_squared",points_prima_squared,"Dp",Dp
+
+    Up = np.empty((2, n))
+
+    Up[0] = (points_prima[2, 1] * points_prima_squared[1] - points_prima[1, 1] * points_prima_squared[2]) / Dp
+    Up[1] = (points_prima[1, 0] * points_prima_squared[2] - points_prima[2, 0] * points_prima_squared[1]) / Dp
+
+    # print Up[:,:5]
+
+    centers = Up + points[0, :, :]
+
+    # distance of centers to first point
+    diff = points[0, :, :] - centers
+    radii = np.sqrt(np.sum(diff ** 2, axis=0))
+
+    return centers, radii
+
+
+
+
 class LineLocation:
     N, S, W, E = range(4)
 
@@ -243,6 +275,19 @@ def fit_circle(im, location, debug=False):
     best_circle = Circle()
 
     # Find a global initialisation
+
+
+    # batch_size = 1000
+    # bases = np.zeros((3, 2, batch_size))
+    # if vertical_sampling:  # W E
+    #     bases[:, 0, :] = w * np.random.rand(3, batch_size)
+    # else:  # N S
+    #     bases[:, 1, :] = y * np.random.rand(3, batch_size)
+    #
+    # bases = np.random.random(size=(3, 2, batch_size))
+    #
+    # centres, radii = circle_vectorized(bases)
+
     i = 0
     while True:
 
