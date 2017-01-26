@@ -173,13 +173,10 @@ def quality(im, circle, location):
     centre = circle.centre
     r = circle.radius
 
-    xmin = centre[0] - r
-    xmax = centre[0] + r
-
-    ymin = centre[1] - r
-    ymax = centre[1] + r
-
     if location == LineLocation.W or location == LineLocation.E:
+        ymin = centre[1] - r
+        ymax = centre[1] + r
+
         yp = np.arange(max(0, ymin), min(h, ymax))
         xp = centre[0] + np.sqrt(r**2 - (yp - centre[1])**2)
 
@@ -188,36 +185,41 @@ def quality(im, circle, location):
         xp = centre[0] - np.sqrt(r**2 - (yp - centre[1])**2)
         val2 = improfile(im, xp, yp)
 
-    elif location == LineLocation.N:
+    else:
+        xmin = centre[0] - r
+        xmax = centre[0] + r
+
         xp = np.arange(max(0, xmin), min(w, xmax))
         yp = centre[1] + np.sqrt(r**2 - (xp - centre[0]) ** 2)
         val1 = improfile(im, xp, yp)
 
         yp = centre[1] - np.sqrt(r**2 - (xp - centre[0])**2)
-        # val2 = improfile_north_line(im, xp, yp)
-        val2 = improfile(im, xp, yp)
-
-    else:  # S
-        xp = np.arange(max(0, xmin), min(w, xmax))
-        yp = centre[1] + np.sqrt(r**2 - (xp - centre[0]) ** 2)
-
-        val1 = improfile(im, xp, yp)
-
-        yp = centre[1] - np.sqrt(r**2 - (xp - centre[0]) ** 2)
         val2 = improfile(im, xp, yp)
 
     return max(val1, val2)
 
 
-def fit_circle(im, location,debug=False):
+# def auto_canny(image, sigma=0.33):
+#     # method in http://www.pyimagesearch.com/2015/04/06/zero-parameter-automatic-canny-edge-detection-with-python-and-opencv/
+#
+#     # compute the median of the single channel pixel intensities
+#     v = np.median(image)
+#
+#     # apply automatic Canny edge detection using the computed median
+#     lower = int(max(0, (1.0 - sigma) * v))
+#     upper = int(min(255, (1.0 + sigma) * v))
+#     edged = cv2.Canny(image, lower, upper)
+#
+#     return edged
 
-    #im = cv2.GaussianBlur(im, (0, 0), 3)
+def auto_canny(im):
+    # http://stackoverflow.com/questions/4292249/automatic-calculation-of-low-and-high-thresholds-for-the-canny-operation-in-open
+    otsu_th = cv2.threshold(im,  0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[0]
+    edged = cv2.Canny(im, otsu_th/3., otsu_th)
+    return edged
 
-    # im = cv2.Canny(im, 150, 250)
 
-
-    im = cv2.GaussianBlur(im, (7, 7), 2)
-    im = cv2.Canny(im, 50, 120)
+def fit_circle(im, location, debug=False):
 
     h, w = im.shape
 
@@ -258,15 +260,15 @@ def fit_circle(im, location,debug=False):
         if rad < min_radius:
             continue
 
-        if location == LineLocation.W and circle.centre[0] <0:
+        if location == LineLocation.W and circle.centre[0] < 0:
             continue
 
-        if location == LineLocation.E and circle.centre[0] >w:
+        if location == LineLocation.E and circle.centre[0] > w:
             continue
 
         q = quality(im, circle, location)
 
-        if debug: print "iter",i,q,best_q
+        if debug: print "iter", i, q, best_q
 
         if q > best_q:
             best_q = q
@@ -277,6 +279,7 @@ def fit_circle(im, location,debug=False):
 
         i += 1
 
+    assert best_circle.radius > 0
     return best_circle
     # local refinement: kind of simulated annealing
 
@@ -329,6 +332,11 @@ def fit_circle(im, location,debug=False):
 
 
 def circinter(R, d, r):
+    # R -- Radius first circle
+    # r -- Radius second circle
+    # d -- distance between centres of both circles
+
+    assert r > 0
     if d <= epsilon:
         return np.pi
 
@@ -398,33 +406,35 @@ def circ_eval_y(x, circle, w):
         return x2
 
 
-def find_circles(im, line_offset=6):
+def find_circles(im, line_offset=4):
 
     h, w = im.shape
+    divs = 4.
 
-    im_e = im[:, int((2 / 3.) * w):]
-    im_w = im[:, 1:int((1 / 3.) * w)]
-    im_n = im[:int((1 / 3.) * h), :]
-    im_s = im[int((2 / 3.) * h):, :]
+    im_e = im[:, int(((divs-1) / divs) * w):]
+    im_w = im[:, 1:int((1 / divs) * w)]
+    im_n = im[:int((1 / divs) * h), :]
+    im_s = im[int(((divs-1) / divs) * h):, :]
 
     e = fit_circle(im_e, LineLocation.E)
-    e.centre += np.array([int((2 / 3.) * w), 0], np.int)
+    e.centre += np.array([int(((divs-1) / divs) * w), 0], np.int)
     e.centre[0] += line_offset
 
     w = fit_circle(im_w, LineLocation.W)
     w.centre[0] -= line_offset
 
-    n = fit_circle(im_n, LineLocation.N, debug=True)
+    n = fit_circle(im_n, LineLocation.N)
     n.centre[1] -= line_offset
 
     s = fit_circle(im_s, LineLocation.S)
-    s.centre += np.array([0, int((2 / 3.) * h)])
+    s.centre += np.array([0, int(((divs-1) / divs) * h)])
     s.centre[1] += line_offset
 
     return n, s, w, e
 
 
 def find_corners(im, circle_n, circle_s, circle_w, circle_e):
+
     h, w = im.shape
 
     a = find_corner(circle_w, circle_n, np.array([0, 0]))
@@ -435,11 +445,20 @@ def find_corners(im, circle_n, circle_s, circle_w, circle_e):
     return a, b, c, d
 
 
-def rectify(original, ds=7):
+def rectify(original, ds=7, pad=4):
     # Rectify a distortiend image (original) to a rectangle. Each edge is discretised in ds points
     # The rectified size can be target_size if is not None. If it is None same size as original
 
+    # detect edges
     im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+    im = cv2.GaussianBlur(im, (0, 0), 1.5)
+    im = auto_canny(im)
+
+    # avoid artifacts in the edge of the image
+    im[-pad:, :] = 0
+    im[:pad, :] = 0
+    im[:, :pad] = 0
+    im[:, -pad:] = 0
 
     h, w = im.shape
 
@@ -506,41 +525,18 @@ def main():
     original = cv2.imread(image_filename)
     im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
+    h, w = im.shape
 
-    rectified, circles, matches = rectify(original)
-
-    plt.subplot(121)
-    #
-    # imCanny = cv2.GaussianBlur(im, (7, 7), 2)
-    # imCanny = cv2.Canny(imCanny, 50, 120)
-    #
-    #
-    # # Apply adaptiveThreshold at the bitwise_not of gray, notice the ~ symbol
-    #
-    # bw = cv2.adaptiveThreshold(im, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 2)
-
-    # horizontal = bw
-    # vertical = bw
-    #
-    #
-    # h, w = im.shape
-    #
-    # horizontalsize = h / 30
-    #
-    # # // Create structure element for extracting horizontal lines through morphology operations
-    # horizontalStructure = cv2.getStructuringElement(cv2.MORPH_RECT, (horizontalsize, 1))
-    #
-    # #// Apply morphology operations
-    # horizontal = cv2.erode(horizontal, horizontalStructure, (1, 1))
-    # horizontal = cv2.dilate(horizontal, horizontalStructure, (1, 1))
-    #
-    plt.imshow(im, cmap='Greys_r')
-
-    # plt.imshow(bw, cmap='Greys_r')
-    #
+    # imCanny = im
+    # imCanny = cv2.GaussianBlur(imCanny, (0, 0), 1.5)
+    # imCanny = auto_canny(imCanny)
+    # plt.imshow(imCanny, cmap='Greys_r')
     # plt.show()
     # quit()
 
+    plt.subplot(121)
+    rectified, circles, matches = rectify(original)
+    plt.imshow(im, cmap='Greys_r')
 
     plot_circle(circles['north'])
     plot_circle(circles['west'])
