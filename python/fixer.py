@@ -28,12 +28,21 @@ def repair_1(x,y):
 
 def repair_2(x,y,increasing=True,debug=False):
     if increasing:
+<<<<<<< HEAD
         return repair_2_increasing(x,y,debug=debug)
     else:
         return repair_2_decreasing(x,y,debug=True)
 
 def repair_2_increasing(x,y,debug=False):
     '''this function reparis a prediction at breaks sections.
+=======
+        return repair_2_increasing(x,y,debug)
+    else:
+        return repair_2_decreasing(x,y,debug)
+
+def repair_2_increasing(x,y,debug=False):
+    '''this function reparis a prediction at breaked sections.
+>>>>>>> 97c8b854c296046e23be401bdc18c4f4afe49369
     for example: 5 5 5 5 4 4 4 6 6 
     Under the assumtion tag are increasing,  if there is one that is going down we should fix it.
     Three cases:
@@ -89,12 +98,21 @@ def repair_2_increasing(x,y,debug=False):
     return k
 
 def repair_2_decreasing(x,y,debug=False):
+<<<<<<< HEAD
     '''this function reparis a prediction at breaks sections.
     for example: 6 6 6 6 4 4 4 5 5 
     Under the assumtion tag are decreasing,  if there is one that is going up we should fix it.
     Three cases:
     a) to the right there is a value greater than to the left, therefore must be the same value as the left
     b) to the right there is a value lesser than to the left, therefore we choose the closest.
+=======
+    '''this function reparis a prediction at breaked sections.
+    for example: 6 6 6 6 4 4 4 5 5 
+    Under the assumtion tag are decreasing,  if there is one that is going down we should fix it.
+    Three cases:
+    a) to the right there is a value greater than to the left, therefore must be the same value as the left
+    b) to the right there is a value lower than to the left, therefore we choose the closest.
+>>>>>>> 97c8b854c296046e23be401bdc18c4f4afe49369
     c) to the right there is a value equal, the same applied as a)
     '''
     n = len(x)
@@ -102,6 +120,7 @@ def repair_2_decreasing(x,y,debug=False):
     k = 0
     if n >=3:
         #look for the first 6
+<<<<<<< HEAD
         i_start = n-2
         for i in xrange(n-2,1,-1):
             if y[i] == 6:
@@ -112,6 +131,18 @@ def repair_2_decreasing(x,y,debug=False):
         for i in xrange(i_start,1,-1):
             if debug: print "(i-1|i|i+1)",i,x[i],":",y[i-1],y[i],y[i+1]
             if y[i] > y[i-1]:
+=======
+        i_start = 2
+        for i in xrange(n-2,2,-1):
+            if y[i] == 6:
+                i_start = i
+                break
+        #9 11 10
+        if debug: print "i_start",i_start
+        for i in xrange(i_start,2,-1):
+            if debug: print "(i-1|i|i+1)",i,x[i],":",y[i-1],y[i],y[i+1]
+            if y[i] < y[i-1]:
+>>>>>>> 97c8b854c296046e23be401bdc18c4f4afe49369
                 k += 1
                 if y[i-1] >= y[i+1]: #make it equal to i-1
                     if debug: print "changing",y[i],"by",y[i-1]
@@ -124,7 +155,11 @@ def repair_2_decreasing(x,y,debug=False):
                         if debug: print "changing",y[i],"by",y[i+1]
                         y[i] = y[i+1]
                         
+<<<<<<< HEAD
             elif y[i] < y[i-1]:
+=======
+            elif y[i] > y[i-1]:
+>>>>>>> 97c8b854c296046e23be401bdc18c4f4afe49369
                 if y[i-1] == y[i+1]: #neighbors are the same
                     k += 1
                     if debug: print "changing",y[i],"by",y[i-1]
@@ -144,7 +179,10 @@ def repair_2_decreasing(x,y,debug=False):
         
     return k
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 97c8b854c296046e23be401bdc18c4f4afe49369
 def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
     n = len(x)
     X = x.reshape((n,1))

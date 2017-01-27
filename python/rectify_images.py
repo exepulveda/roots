@@ -11,15 +11,12 @@ import cv2
 import numpy as np
 
 import config
-import prediction
 import utils
-import bound
 
 from config import configuration
-from utils import extract_frames_from_video
-from restore import select_and_restore
-from fixer import fix_prediction
 from rectify import rectify
+
+
 
 parser = argparse.ArgumentParser(description="Rectify distortioned window images")
 parser.add_argument('-i','--input', type=str,help='input folder name',required=True)
@@ -38,25 +35,26 @@ def rectification(folder, outputfolder, configuration,windows=[]):
 
     image_list = []
     utils.expand_folder(folder, image_list)
-
     if len(image_list) == 0:
         logging.info("STEP 5: there are not windows to rectify...")
         return
         
     #seed number
     np.random.seed(1634120)
+    
+    n = len(image_list)
 
-    for image_name in image_list:
+    for k,image_name in enumerate(image_list):
         #extract window number from name
         filename, extension = os.path.splitext(os.path.basename(image_name))
         #filename = "frame-WINDOWS"
         windows_in_image = int(filename.split("-")[1])
         
         if len(windows) == 0  or windows_in_image in windows:
-            print (image_name,windows_in_image)
+            #print (image_name,windows_in_image)
 
             im = cv2.imread(image_name)
-            rectified, circles, matches = rectify(im)
+            rectified, circles, matches = rectify(im,configuration.rectify.iterations)
             
             h, w, colors = im.shape
             # check if resize is needed
@@ -65,9 +63,7 @@ def rectification(folder, outputfolder, configuration,windows=[]):
 
             cv2.imwrite((os.path.join(outputfolder, "{}{}".format(filename, extension))), rectified)
 
-    video_status["window_rectification"] = True
-    config.save_video_status(video_folder, video_status)
-
+        utils.printProgressBar(k,n)
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -87,4 +83,3 @@ if __name__ == "__main__":
     logging.info("Processing folder: %s",args.input)
     rectification(args.input, args.output, configuration,windows=args.only)
     
-

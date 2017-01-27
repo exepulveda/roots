@@ -44,6 +44,7 @@ configuration.restore.iterations = 30
 configuration.rectify = Dummy()
 configuration.rectify.image_width = 400
 configuration.rectify.image_height = 300
+configuration.rectify.iterations = 7500
 #configuration.rectify.image_width = 384
 #configuration.rectify.image_height = 288
 
