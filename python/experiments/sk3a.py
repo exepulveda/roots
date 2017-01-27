@@ -16,6 +16,10 @@ from scipy.ndimage import gaussian_filter
 
 from skimage.filters import threshold_otsu, threshold_adaptive
 
+import sys
+
+sys.path += [".."]
+
 from bound import load_templates
 from bound import predict
 from bound import predict_all_window
@@ -24,7 +28,7 @@ from utils import expand_folder
 
 from fixer import fix_prediction
 
-im_path = "/home/esepulveda/projects/roots/python/processing/1.16-20150828.AVI/accepted/"
+im_path = "/home/esepulveda/Dropbox/Roots videos/Accepted images, video 1.11 - Inverted order/"
 #im_path = "/Users/exequiel/projects/roots/python/processing/1.25.AVI/accepted"
 #im_path = "/Users/exequiel/projects/roots/python/processing/1.16-20150828.AVI/accepted"
 
@@ -138,6 +142,7 @@ if True or not os.path.exists("x.npy"):
         #print i,im
         prediction = predict(im,templates,debug=False)
         y += [prediction if prediction else 0]
+        print i,y[i],im
 
     x = np.int32(x)
     y = np.int32(y)
@@ -169,71 +174,27 @@ while  True:
 print "ransac regression"
 
 
-def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
-    X = x.reshape((n,1))
-    y = np.array(y_original)
-
-
-    model = lreg(X,y, th_detect)
-    pred = model.predict(X)
-    pred = np.int32(np.clip(np.round(pred),6,54))
-    line_X = np.arange(np.min(x),np.max(x))
-    line_y = model.predict(line_X[:, np.newaxis])
-
-    # find ransac outliers
-    diff = np.abs(y-pred)
-    outlrs_indices = np.argwhere(diff> th_fix)
-    inlrs_indices =  np.argwhere(diff<= th_fix)
-
-
-    x_inlrs = [a[0] for a in x[inlrs_indices]]
-    indices_inlrs = [a[0] for a in inlrs_indices]
-    indices_outlrs = [a[0] for a in outlrs_indices]
-
-    if debug: print "x_inlrs:",x_inlrs
-
-
-
-    for k in outlrs_indices:
-        k = k[0]
-        
-        if debug: print "looking for:",k,x[k]
-        left_inlr = np.searchsorted(x_inlrs,x[k]) - 1
-        right_inlr = left_inlr+1
-        
-        if left_inlr < 0:
-            #let fix to the next 
-            y[k] = y[indices_inlrs[0]]
-        elif right_inlr < len(x_inlrs):
-            xa = x_inlrs[left_inlr];
-            xb = x_inlrs[right_inlr];
-                
-            ya = y[indices_inlrs[left_inlr]]
-            yb = y[indices_inlrs[right_inlr]]
-
-            #calculate regression
-            y_pred = np.round(ya + (x[k]-xa)*float(yb-ya)/float(xb-xa))
-
-            print left_inlr,x_inlrs[left_inlr],x_inlrs[right_inlr],y[indices_inlrs[left_inlr]],y[indices_inlrs[right_inlr]],y_pred
-            y[k] = y_pred
-        else:
-            y[k] = y[indices_inlrs[left_inlr]]
-
-        #insert prediction as in inliers
-        x_inlrs = np.insert(x_inlrs,left_inlr+1,x[k])
-        indices_inlrs = np.insert(indices_inlrs,left_inlr+1,k)
-        #find inliers both size
-
-
-    y = np.int32(np.round(y))
-    return y
-
-
 print x.shape
 
-y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=4,debug=False)
+y2 = fix_prediction(x,y)
 
-k = repair_1(x,y2)
+
+plt.subplot(111)
+#plt.plot(x[indices_outlrs],y_original[indices_outlrs],"x",color="r") # ransac outliers
+#plt.plot(x[indices_inlrs],y_original[indices_inlrs],"o",color="b") # ransac inliers
+plt.plot(x,y,"x",color="b") # new asignation
+plt.plot(x,y2,"x",color="r") # new asignation
+
+#plt.plot(line_X, line_y, color='navy', linestyle='-', label='Linear regressor')
+plt.grid()
+plt.show()
+
+
+quit()
+
+#y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=4,debug=False)
+
+#k = repair_1(x,y2)
 #k = repair_2(x,y2)
 
 # save assignment
@@ -267,14 +228,6 @@ for i in range(len(x)):
 
 # plot
 
-plt.subplot(111)
-#plt.plot(x[indices_outlrs],y_original[indices_outlrs],"x",color="r") # ransac outliers
-#plt.plot(x[indices_inlrs],y_original[indices_inlrs],"o",color="b") # ransac inliers
-plt.plot(x,y,"x",color="b") # new asignation
-plt.plot(x,y2,"x",color="r") # new asignation
 
-#plt.plot(line_X, line_y, color='navy', linestyle='-', label='Linear regressor')
-plt.grid()
-plt.show()
 
 

@@ -16,11 +16,11 @@ import cv2
 
 
 MIN_WIDTH = 8
-MAX_WITH  = 40
+MAX_WITH  = 50
 MIN_HEIGHT = 17
-MAX_HEIGHT = 28
+MAX_HEIGHT = 40
 MIN_AREA   = 200
-MAX_AREA   = 1000
+MAX_AREA   = 1500
 ONE_DIGIT_LIMIT = 25
 TWO_DIGITS_LIMIT   = 32
 
@@ -42,9 +42,11 @@ def filter_valid_boxes(boxes,min_width,max_width,min_height,max_height,min_a,max
     
     filter1 = []
     for x,y,w,h in boxes:
-        if debug: print "filter1:boxes",w,h,w*h
+        if debug: print "filter1:boxes",x,y,w,h,w*h
         if min_height <= h <= max_height and min_width <= w <= max_width and min_a <= w*h <= max_a:
             filter1 += [(x,y,w,h)]
+        else:
+            if debug: print "fail",min_height,h,max_height, " and ",min_width,w,max_width," and ", min_a, w*h ,max_a
     
     if debug: print "filter1",filter1
     #print "filter2",filter2
@@ -172,7 +174,7 @@ def get_all_boxes(image,global_thresh=None,steps=20,limit=TWO_DIGITS_LIMIT,debug
 
         #global_thresh = threshold_isodata (gray)       
         #global_thresh = threshold_li(gray)
-        global_thresh = threshold_otsu(gray)
+        global_thresh = threshold_otsu(gray) * 0.8
         #global_thresh = threshold_yen(gray)
         
         
@@ -403,7 +405,8 @@ def predict(image_name,templates,tw=44,th=28,min_w=24,debug=False):
     #image = data.imread(image_name)
     #
     image = cv2.imread(image_name)
-    image = image[10:80,10:80]
+    #image = image[10:80,10:80]
+    image = image[10:150,10:150]
     image = gaussian_filter(image, 1)
     
     

@@ -16,14 +16,18 @@ from scipy.ndimage import gaussian_filter
 
 from skimage.filters import threshold_otsu, threshold_adaptive
 
+import sys
+
+sys.path += [".."]
 from bound import filter_valid_boxes, get_bounding_box,limit_bounding_box,best_box,get_all_boxes
 
 for i in range(0,1): #7,19,51    18,23,25,34
     #im_path = "/Users/exequiel/projects/roots/python/processing/2.42.AVI/accepted/{0}.tiff".format(i)
     im_path = "/home/esepulveda/Documents/projects/roots/python/processing/1.24.AVI/windows/frame-7/2319.tiff"
+    im_path = "/home/esepulveda/Dropbox/Roots videos/Accepted images, video 1.11 - Inverted order/126.tiff"
     if os.path.exists(im_path):
         image = data.imread(im_path)
-        image = image[10:80,10:80]
+        image = image[10:150,10:150]
         image = gaussian_filter(image, 1)
 
         #image = rgb2gray(image)

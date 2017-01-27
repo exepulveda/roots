@@ -26,7 +26,13 @@ def repair_1(x,y):
                 k += 1
     return k
 
-def repair_2(x,y,debug=False):
+def repair_2(x,y,increasing=True,debug=False):
+    if increasing:
+        return repair_2_increasing(x,y,debug=debug)
+    else:
+        return repair_2_decreasing(x,y,debug=True)
+
+def repair_2_increasing(x,y,debug=False):
     '''this function reparis a prediction at breaks sections.
     for example: 5 5 5 5 4 4 4 6 6 
     Under the assumtion tag are increasing,  if there is one that is going down we should fix it.
@@ -82,6 +88,63 @@ def repair_2(x,y,debug=False):
         
     return k
 
+def repair_2_decreasing(x,y,debug=False):
+    '''this function reparis a prediction at breaks sections.
+    for example: 6 6 6 6 4 4 4 5 5 
+    Under the assumtion tag are decreasing,  if there is one that is going up we should fix it.
+    Three cases:
+    a) to the right there is a value greater than to the left, therefore must be the same value as the left
+    b) to the right there is a value lesser than to the left, therefore we choose the closest.
+    c) to the right there is a value equal, the same applied as a)
+    '''
+    n = len(x)
+
+    k = 0
+    if n >=3:
+        #look for the first 6
+        i_start = n-2
+        for i in xrange(n-2,1,-1):
+            if y[i] == 6:
+                i_start = i
+                break
+        #10 11 9
+        if debug: print "i_start",i_start, y
+        for i in xrange(i_start,1,-1):
+            if debug: print "(i-1|i|i+1)",i,x[i],":",y[i-1],y[i],y[i+1]
+            if y[i] > y[i-1]:
+                k += 1
+                if y[i-1] >= y[i+1]: #make it equal to i-1
+                    if debug: print "changing",y[i],"by",y[i-1]
+                    y[i] = y[i-1]
+                else:
+                    if (x[i] - x[i-1]) <= (x[i+1] - x[i]): #closet to left
+                        if debug: print "changing",y[i],"by",y[i-1]
+                        y[i] = y[i-1]
+                    else:
+                        if debug: print "changing",y[i],"by",y[i+1]
+                        y[i] = y[i+1]
+                        
+            elif y[i] < y[i-1]:
+                if y[i-1] == y[i+1]: #neighbors are the same
+                    k += 1
+                    if debug: print "changing",y[i],"by",y[i-1]
+                    y[i] = y[i-1]
+                elif y[i-1] < y[i+1] and y[i] > y[i+1]: #neighbors are increasingly consisten
+                    if (x[i] - x[i-1]) <= (x[i+1] - x[i]): #closet to left
+                        if debug: print "changing",y[i],"by",y[i-1]
+                        y[i] = y[i-1]
+                    else:
+                        if debug: print "changing",y[i],"by",y[i+1]
+                        y[i] = y[i+1]
+
+        #the last one
+        if y[-1] < y[-2]:
+            if debug: print "changing",y[-1],"by",y[-2]
+            y[-1] = y[-2]
+        
+    return k
+
+
 def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
     n = len(x)
     X = x.reshape((n,1))
@@ -89,6 +152,12 @@ def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
 
 
     model = lreg(X,y, th_detect)
+    
+    #check if slope is possitive
+    if debug: print "slope:",model.estimator_.coef_
+    
+    slope = model.estimator_.coef_
+    
     pred = model.predict(X)
     pred = np.int32(np.clip(np.round(pred),6,54))
     line_X = np.arange(np.min(x),np.max(x))
@@ -105,8 +174,6 @@ def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
     indices_outlrs = [a[0] for a in outlrs_indices]
 
     if debug: print "x_inlrs:",x_inlrs
-
-
 
     for k in outlrs_indices:
         k = k[0]
@@ -141,9 +208,8 @@ def detect_fix_outliers(x,y_original,th_detect=3,th_fix=2,debug=False):
         indices_inlrs = np.insert(indices_inlrs,left_inlr+1,k)
         #find inliers both size
 
-
     y = np.int32(np.round(y))
-    return y
+    return (y,slope)
 
 def fix_prediction(images_numbers, predictions):
     x = np.int32(images_numbers)
@@ -155,12 +221,12 @@ def fix_prediction(images_numbers, predictions):
     k = repair_1(x,y)
 
     #repair outliers
-    y2 = detect_fix_outliers(x,y,th_detect=4,th_fix=4,debug=False)
+    y2,slope = detect_fix_outliers(x,y,th_detect=4,th_fix=4,debug=False)
     
     
     #repair obvious errors
     k = repair_1(x,y2)
     #repair latest errors
-    k = repair_2(x,y2)
+    k = repair_2(x,y2,increasing=(slope >= 0))
 
     return y2
