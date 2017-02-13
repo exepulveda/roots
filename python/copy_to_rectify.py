@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 import os.path
 import argparse
+import csv
 import random
 import shutil
 import logging
@@ -21,41 +22,14 @@ from rectify import rectify
 format_images = "T{tube}_{window:03d}_{year:04d}.{month:02d}.{day:02d}_{session:03d}.jpg"
 
 
-parser = argparse.ArgumentParser(description="Rectify distortioned window images")
-parser.add_argument('-t','--tube', type=str,help='tube name',required=True)
-parser.add_argument('-o','--output', type=str,help='output folder name',required=True)
-parser.add_argument('--verbose', help='output debug info',default=False,action='store_true',required=False)
-parser.add_argument('--force', help='restart from extraction',required=False,default=False,action='store_true')
-parser.add_argument('--only', help='list of windows to rectify',required=False,default=[],type=int,nargs='*')
+parser = argparse.ArgumentParser(description="Copy selected images to rectofication process")
+parser.add_argument('-t','--tube', type=str,help='tube name',required=False,default=None)
+parser.add_argument('-d','--date', type=str,help='date',required=False,default=None)
+parser.add_argument('-l','--list', type=str, help='use a list of tubes and dates',required=False,default=None)
+parser.add_argument('-v','--verbose', help='output debug info',default=False,action='store_true',required=False)
 
 
-def rectification(images, tube, outputfolder, configuration,windows=[]):
-    # delete outputfolder
-    if os.path.exists(outputfolder):
-        shutil.rmtree(outputfolder)
-
-    if not os.path.exists(outputfolder):
-        os.mkdir(outputfolder)
-
-    #image_list = []
-    #utils.expand_folder(folder, image_list)
-    #if len(image_list) == 0:
-    #    logging.info("STEP 5: there are not windows to rectify...")
-    #    return
-    
-    #./processing/2.36.AVI/selected/frame-28.tiff
-    
-    #get number of different dates
-    dates = set([x[1] for x in images])
-    dates = list(dates)
-    dates.sort()
-    
-    sessions = {}
-    for k,date in enumerate(dates):
-        sessions[date] = (k + 1)
-    
-    logging.info("Number of sessions found: %d", len(sessions))
-    
+def copy_images(tube,date,window_filename, configuration):
     #template
     template = configuration.rootfly.template
     #seed number
@@ -97,8 +71,65 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.INFO)
 
-    logging.info("Processing tube: %s",args.tube)
+    #check for argument to be list or single
+    if args.list is None and (args.tube is None or args.date is None):
+        logging.info("You need to indicate --list or (--tube and --date) arguments")
+        quit()
+        
+    if args.list is None:
+        #make a list with tube and date
+        to_copy = [(args.tube,args.date)]
+    else:
+        #read csv
+        list_filename = args.list
+        #check if args.list exists
+        if os.path.exists(list_filename):
+            reader = csv.reader(open(list_filename),delimiter=",")
+            to_copy = [(row[0],row[1]) for row in reader]
+        else:
+            logging.info("The file [%s] in --list parameter does not exist",list_filename)
+            quit()
+            
+    n = len(to_copy)
 
+    logging.info("Processing %d tubes+dates",n)
+
+    list_to_process = []
+    
+    for k,(tube,date) in enumerate(to_copy):
+        #configuration.rootfly.to_copy_from
+        pathname = configuration.rootfly.to_copy_from.format(tube=tube,date=date)
+        
+        ret = glob.glob(pathname)
+
+        logging.info("Processing tube: [%s], date: [%s], number of windows: [%d]",tube,date,len(ret))
+
+        
+        for filename in ret:
+            cols = filename.split("/")
+            
+            #pathname = pathname[len(home)+1:]
+            #no_selected = os.path.split(pathname)[0]
+            #date = no_selected.split(".")[0]
+            #folder_name, folder_extension = os.path.splitext(no_selected)
+            #print(date, filename)
+            #list_to_process += [(filename,date)]        
+            list_to_process += [(tube,date,cols[-1])]
+            
+        #copy_images(images, tube, outputfolder, configuration,windows=[])
+
+    n = len(list_to_process)
+    logging.info("Number of images to copy: [%d]",n)
+
+    for k,(tube,date,filename) in enumerate(list_to_process):
+        #copy window image to destination folder
+        
+        utils.printProgressBar(k,n)
+        
+    utils.printProgressBar(n,n)
+
+
+    quit()  
     if not os.path.exists(args.output):
         os.mkdir(args.output)
 

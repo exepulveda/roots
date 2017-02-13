@@ -101,7 +101,7 @@ def extract_frames_from_video(video_path,frames_path,skip=15,extension="tiff"):
     vidcap.release()
     return image_list,i
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, bar_length=100, fill = '*'):
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, bar_length=60, fill = '*'):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -125,3 +125,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total: 
         sys.stdout.write('\n')
     sys.stdout.flush()
+
+def get_rootfly_filename(template,tube,window,year,month,day,session=0):
+    filename = template.format(tube=tube,window=window,year=year,month=month,day=day,session=session)
+    return filename

@@ -45,15 +45,27 @@ configuration.rectify = Dummy()
 configuration.rectify.image_width = 400
 configuration.rectify.image_height = 300
 configuration.rectify.iterations = 7500
-#configuration.rectify.image_width = 384
-#configuration.rectify.image_height = 288
 
-
-configuration.roofly = Dummy()
-configuration.roofly.template = "EXPERIMENT_T{tube}_L{window}_{date}_{time}_{session}_CBD.{extension}"
+configuration.rootfly = Dummy()
+configuration.rootfly.template = "T{tube}_L{window:03d}_{year:04d}.{month:02d}.{day:02d}_{session:03d}.jpg" 
+configuration.rootfly.to_copy_from = os.path.join(configuration.home,"processing","{tube}-{date}.AVI","selected","frame-*." + configuration.extension)
 
 def get_configuration():
     return configuration
+    
+    
+def get_processed_foldername():
+    if not os.path.exists(os.path.join(configuration.home,"processed")):
+        os.mkdir(os.path.join(configuration.home,"processed"))
+
+    return os.path.join(configuration.home,"processed")
+
+def get_processing_foldername():
+    if not os.path.exists(os.path.join(configuration.home,"processing")):
+        os.mkdir(os.path.join(configuration.home,"processing"))
+
+    return os.path.join(configuration.home,"processing")
+
     
 def setup_video_folders(video_filname,reset_folder=True):
     #extract video name
