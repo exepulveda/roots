@@ -3,6 +3,7 @@
 from __future__ import print_function
 import os
 import os.path
+import shutil
 import argparse
 import csv
 import random
@@ -16,6 +17,8 @@ import config
 import utils
 
 from config import configuration
+from config import get_to_rectify_foldername
+
 from rectify import rectify
 
 
@@ -98,7 +101,7 @@ if __name__ == "__main__":
     
     for k,(tube,date) in enumerate(to_copy):
         #configuration.rootfly.to_copy_from
-        pathname = configuration.rootfly.to_copy_from.format(tube=tube,date=date)
+        pathname = configuration.rootfly.to_copy_from.format(tube=tube,date=date,year=date[0:4])
         
         ret = glob.glob(pathname)
 
@@ -114,46 +117,32 @@ if __name__ == "__main__":
             #folder_name, folder_extension = os.path.splitext(no_selected)
             #print(date, filename)
             #list_to_process += [(filename,date)]        
-            list_to_process += [(tube,date,cols[-1])]
+            list_to_process += [(tube,date,cols[-1],filename)]
             
-        #copy_images(images, tube, outputfolder, configuration,windows=[])
 
     n = len(list_to_process)
     logging.info("Number of images to copy: [%d]",n)
 
-    for k,(tube,date,filename) in enumerate(list_to_process):
+    for k,(tube,date,filename,fullpath) in enumerate(list_to_process):
         #copy window image to destination folder
+        pathname = configuration.rootfly.to_copy_from.format(tube=tube,date=date,year=date[0:4])
+        #print(k,tube,date,filename,fullpath)
+        
+        inputfilename = fullpath
+        destination =  configuration.rootfly.to_rectify_path_template.format(tube=tube,date=date,year=date[0:4])
+        #create folder if is needed
+        try:
+            os.makedirs(destination)
+        except:
+            pass
+            
+        shutil.copyfile(inputfilename,os.path.join(destination,filename))
+        
+        #copy_images(images, tube, date, outputfolder, configuration)
+        #origin = images, tube, date, outputfolder, configuration
         
         utils.printProgressBar(k,n)
         
-    utils.printProgressBar(n,n)
+    if n> 0: utils.printProgressBar(n,n)
 
-
-    quit()  
-    if not os.path.exists(args.output):
-        os.mkdir(args.output)
-
-    pathname = os.path.join(configuration.home,"processing","{0}-*.AVI".format(args.tube),"selected","*.tiff")
-    logging.info("Scanning images for tube with template: %s",pathname)
-    
-    ret = glob.glob(pathname)
-    
-    logging.info("Processing %d images for tube: %s",len(ret),args.tube)
-    
-    
-    home = os.path.join(configuration.home,"processing",args.tube)
-    
-    list_to_process = []
-    for filename in ret:
-        pathname,_ = os.path.split(filename)
-        
-        pathname = pathname[len(home)+1:]
-        no_selected = os.path.split(pathname)[0]
-        date = no_selected.split(".")[0]
-        #folder_name, folder_extension = os.path.splitext(no_selected)
-        #print(date, filename)
-        list_to_process += [(filename,date)]
-        
-    
-    rectification(list_to_process, args.tube, args.output, configuration,windows=args.only)
-    
+    logging.info("Allimages have been copied to: [%s]",get_to_rectify_foldername())
