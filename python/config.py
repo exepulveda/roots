@@ -50,6 +50,11 @@ configuration.rootfly = Dummy()
 configuration.rootfly.template = "T{tube}_L{window:03d}_{year:04d}.{month:02d}.{day:02d}_{session:03d}.jpg" 
 configuration.rootfly.to_copy_from = os.path.join(configuration.home,"processed","{year}","{date}","{tube}-{date}.AVI","selected","frame-*." + configuration.extension)
 configuration.rootfly.to_rectify_path_template = os.path.join(configuration.home,"to_rectify","{year}","{date}","{tube}-{date}.AVI")
+configuration.rootfly.to_rectify_images_template = os.path.join(configuration.home,"to_rectify","{year}","{date}","{tube}-{date}.AVI","frame-*.*")
+configuration.rootfly.to_rootfly_path_template = os.path.join(configuration.home,"rootfly","{tube}")
+configuration.rootfly.to_rectify_single_image_template = os.path.join(configuration.home,"to_rectify","{year}","{date}","{tube}-{date}.AVI","frame-{window}.tiff")
+configuration.rootfly.pad = 4
+configuration.rootfly.extra_pad = 6
 
 def get_configuration():
     return configuration
@@ -73,6 +78,11 @@ def get_to_rectify_foldername():
 
     return os.path.join(configuration.home,"to_rectify")
 
+def get_to_rootfly_foldername():
+    if not os.path.exists(os.path.join(configuration.home,"rootfly")):
+        os.mkdir(os.path.join(configuration.home,"rootfly"))
+
+    return os.path.join(configuration.home,"rootfly")
     
 def setup_video_folders(video_filname,reset_folder=True):
     #extract video name

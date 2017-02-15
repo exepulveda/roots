@@ -126,6 +126,6 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         sys.stdout.write('\n')
     sys.stdout.flush()
 
-def get_rootfly_filename(template,tube,window,year,month,day,session=0):
+def get_rootfly_filename(template,tube,window,year,month,day,session):
     filename = template.format(tube=tube,window=window,year=year,month=month,day=day,session=session)
     return filename

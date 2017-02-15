@@ -31,41 +31,6 @@ parser.add_argument('-d','--date', type=str,help='date',required=False,default=N
 parser.add_argument('-l','--list', type=str, help='use a list of tubes and dates',required=False,default=None)
 parser.add_argument('-v','--verbose', help='output debug info',default=False,action='store_true',required=False)
 
-
-def copy_images(tube,date,window_filename, configuration):
-    #template
-    template = configuration.rootfly.template
-    #seed number
-    np.random.seed(1634120)
-    
-    n = len(images) 
-
-    for k,(image_name,date) in enumerate(images):
-        filename, extension = os.path.splitext(os.path.basename(image_name))
-        year = int(date[:4])
-        month = int(date[4:6])
-        day = int(date[6:8])
-        
-        #extract window number from name
-        windows_in_image = int(filename.split("-")[1])
-        
-        if len(windows) == 0  or windows_in_image in windows:
-            #print (image_name,windows_in_image)
-
-            im = cv2.imread(image_name)
-            rectified, circles, matches = rectify(im,configuration.rectify.iterations)
-            
-            h, w, colors = im.shape
-            # check if resize is needed
-            if configuration.rectify.image_width != w or configuration.rectify.image_height != h:
-                rectified = cv2.resize(rectified, (configuration.rectify.image_width, configuration.rectify.image_height))
-
-            out_filename = utils.get_rootfly_filename(template,tube,windows_in_image,year,month,day,session=sessions[date])
-            
-            cv2.imwrite(os.path.join(outputfolder,out_filename), rectified)
-
-        utils.printProgressBar(k,n)
-
 if __name__ == "__main__":
     args = parser.parse_args()
 
