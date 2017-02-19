@@ -57,7 +57,8 @@ def expand_folder(path,container):
         #    print filename
         #    files += [filename]
         for name in files:
-            container += [os.path.join(dirpath,name)]
+            if name[0] != ".":
+                container += [os.path.join(dirpath,name)]
 
 def load_model(model_filename,model_weights_filename):
     from keras.models import model_from_json

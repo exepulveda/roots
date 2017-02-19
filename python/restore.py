@@ -49,7 +49,6 @@ def winframe(images, win_sz=7,debug=False):
 
 # Restore images by aligning them and taking the median
 # at each pixel.
-
 def restore(images,iterations=50):
 
     num_of_images = len(images)
@@ -100,7 +99,7 @@ def restore(images,iterations=50):
                 (cc, warp_matrix) = cv2.findTransformECC(fixed, moving, warp_matrix, warp_mode, criteria)
 
                 aligned = cv2.warpPerspective(images[i], warp_matrix, (sz[1], sz[0]),
-                                          flags=cv2.INTER_LINEAR + cv2.WARP_INVERSE_MAP)
+                                              flags=cv2.INTER_LINEAR + cv2.WARP_INVERSE_MAP)
             except:
                 aligned = None
 
@@ -121,19 +120,21 @@ def restore(images,iterations=50):
     for i in xrange(nx):
         for j in xrange(ny):
             ii = None
-            values = [x[i,j] for x in alignedImagesIntensity]
+            values = [x[i,j] for x in alignedImagesIntensity ]
+
             values.sort()
             center = values[nz//2]
+
             for k in xrange(nz):
                 if alignedImagesIntensity[k][i,j] == center:
-                   ii = k
-                   break
+                    ii = k
+                    break
 
             assert ii is not None
-            retb[i,j] = alignedImages[ii][i,j,0] 
-            retg[i,j] = alignedImages[ii][i,j,1] 
-            retr[i,j] = alignedImages[ii][i,j,2] 
-  
+            retb[i,j] = alignedImages[ii][i,j,0]
+            retg[i,j] = alignedImages[ii][i,j,1]
+            retr[i,j] = alignedImages[ii][i,j,2]
+
     retb = np.uint8(retb)
     retg = np.uint8(retg)
     retr = np.uint8(retr)

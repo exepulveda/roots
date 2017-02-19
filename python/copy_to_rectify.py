@@ -6,23 +6,14 @@ import os.path
 import shutil
 import argparse
 import csv
-import random
 import shutil
 import logging
-import cv2
-import numpy as np
 import glob
 
-import config
 import utils
 
 from config import configuration
 from config import get_to_rectify_foldername
-
-from rectify import rectify
-
-
-format_images = "T{tube}_{window:03d}_{year:04d}.{month:02d}.{day:02d}_{session:03d}.jpg"
 
 
 parser = argparse.ArgumentParser(description="Copy selected images to rectofication process")
@@ -60,30 +51,20 @@ if __name__ == "__main__":
             
     n = len(to_copy)
 
-    logging.info("Processing %d tubes+dates",n)
+    logging.info("Processing %d tube-date tuples",n)
 
     list_to_process = []
     
     for k,(tube,date) in enumerate(to_copy):
-        #configuration.rootfly.to_copy_from
         pathname = configuration.rootfly.to_copy_from.format(tube=tube,date=date,year=date[0:4])
         
         ret = glob.glob(pathname)
 
         logging.info("Processing tube: [%s], date: [%s], number of windows: [%d]",tube,date,len(ret))
 
-        
         for filename in ret:
             cols = filename.split("/")
-            
-            #pathname = pathname[len(home)+1:]
-            #no_selected = os.path.split(pathname)[0]
-            #date = no_selected.split(".")[0]
-            #folder_name, folder_extension = os.path.splitext(no_selected)
-            #print(date, filename)
-            #list_to_process += [(filename,date)]        
             list_to_process += [(tube,date,cols[-1],filename)]
-            
 
     n = len(list_to_process)
     logging.info("Number of images to copy: [%d]",n)
@@ -94,7 +75,7 @@ if __name__ == "__main__":
         #print(k,tube,date,filename,fullpath)
         
         inputfilename = fullpath
-        destination =  configuration.rootfly.to_rectify_path_template.format(tube=tube,date=date,year=date[0:4])
+        destination = configuration.rootfly.to_rectify_path_template.format(tube=tube,date=date,year=date[0:4])
         #create folder if is needed
         try:
             os.makedirs(destination)
@@ -108,6 +89,6 @@ if __name__ == "__main__":
         
         utils.printProgressBar(k,n)
         
-    if n> 0: utils.printProgressBar(n,n)
+    if n > 0: utils.printProgressBar(n,n)
 
-    logging.info("Allimages have been copied to: [%s]",get_to_rectify_foldername())
+    logging.info("All images have been copied to: [%s]", get_to_rectify_foldername())

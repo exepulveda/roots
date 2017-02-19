@@ -259,12 +259,18 @@ def rectification(video, video_status, configuration,windows=[]):
     #seed number
     np.random.seed(1634120)
 
+
     for image_name in image_list:
         #extract window number from name
+
+        print ('image_name ', image_name)
         filename, extension = os.path.splitext(os.path.basename(image_name))
+
         #filename = "frame-WINDOWS"
+        print('filename  ', filename)
+
         windows_in_image = int(filename.split("-")[1])
-        
+
         if len(windows) == 0  or windows_in_image in windows:
             print (image_name,windows_in_image)
 

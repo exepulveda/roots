@@ -18,9 +18,6 @@ from config import get_to_rootfly_foldername
 from rectify import rectify
 
 
-format_images = "T{tube}_{window:03d}_{year:04d}.{month:02d}.{day:02d}_{session:03d}.jpg"
-
-
 parser = argparse.ArgumentParser(description="Rectify distortioned window images")
 parser.add_argument('-t','--tube', type=str,help='tube name',required=True)
 parser.add_argument('-w','--window', type=int,help='window',required=True)
@@ -62,7 +59,6 @@ def rectification(tube,window,date,session,pad,configuration):
     cv2.imwrite(out_filename, rectified)
 
 
-
 if __name__ == "__main__":
     args = parser.parse_args()
 
@@ -76,9 +72,5 @@ if __name__ == "__main__":
 
     #configuration.rootfly.to_copy_from
     sdate = str(args.date)
-    #filename = configuration.rootfly.to_rectify_single_image_template.format(tube=args.tube,date=sdate,year=sdate[0:4],window=args.window)
-
-    #list_to_process += [(tube,date,session,cols[-1],filename)]
 
     rectification(args.tube,args.window,sdate,args.session,args.pad,configuration)
-    
