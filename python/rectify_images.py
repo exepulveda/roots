@@ -3,11 +3,9 @@ import os
 import os.path
 import argparse
 import csv
-import random
 import shutil
 import logging
 import cv2
-import numpy as np
 import glob
 
 import config
@@ -18,12 +16,9 @@ from config import get_to_rootfly_foldername
 from rectify import rectify
 
 
-format_images = "T{tube}_{window:03d}_{year:04d}.{month:02d}.{day:02d}_{session:03d}.jpg"
-
-
 parser = argparse.ArgumentParser(description="Rectify distortioned window images")
 parser.add_argument('-t','--tube', type=str,help='tube name',required=False)
-parser.add_argument('-s','--last-sesssion', type=int,help='tube name',required=False)
+parser.add_argument('-s','--last-session', type=int,help='tube name',required=False)
 parser.add_argument('-l','--list', type=str, help='use a list of tubes and dates',required=False,default=None)
 parser.add_argument('--verbose', help='output debug info',default=False,action='store_true',required=False)
 
@@ -76,13 +71,13 @@ if __name__ == "__main__":
 
 
     #check for argument to be list or single
-    if args.list is None and (args.tube is None or args.last_sesssion is None):
-        logging.error("You need to indicate --list or (--tube and --last-sesssion) arguments")
+    if args.list is None and (args.tube is None or args.last_session is None):
+        logging.error("You need to indicate --list or (--tube and --last-session) arguments")
         quit()
         
     if args.list is None:
         #make a list with tube and date
-        to_copy = [(args.tube,args.last_sesssion)]
+        to_copy = [(args.tube,args.last_session)]
     else:
         #read csv
         list_filename = args.list
