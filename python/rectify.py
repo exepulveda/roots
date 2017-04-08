@@ -120,8 +120,6 @@ def circle_vectorized(points):
     return centers, radii
 
 
-
-
 class LineLocation:
     N, S, W, E = range(4)
 
@@ -149,6 +147,7 @@ def improfile_vectorized(im, x, y):
         
         rets[i] = ret
     return rets
+
 
 def improfile_loop(im, x, y):
 
@@ -261,7 +260,8 @@ def quality_vectorized(im, centres, radii,location):
 
         return np.maximum(val1,val2)
 
-def quality(im, centre,r,r2, location):
+
+def quality(im, centre, r, r2, location):
     h, w = im.shape
 
     if location == LineLocation.W or location == LineLocation.E:
@@ -321,7 +321,7 @@ def quality_inefficient(im, circle, location):
     return max(val1, val2)
 
 
-# def auto_canny(image, sigma=0.33):
+# def auto_canny_median(image, sigma=0.33):
 #     # method in http://www.pyimagesearch.com/2015/04/06/zero-parameter-automatic-canny-edge-detection-with-python-and-opencv/
 #
 #     # compute the median of the single channel pixel intensities
@@ -345,10 +345,9 @@ def fit_circle_vectorized(im, location, iterations, debug=False):
 
     h, w = im.shape
 
-    if debug: print "image shape",im.shape,"location",location
+    if debug: print "image shape", im.shape, "location", location
 
     vertical_sampling = location == LineLocation.W or location == LineLocation.E
-
 
     #create sample of circles
     ncircles = iterations
@@ -360,45 +359,32 @@ def fit_circle_vectorized(im, location, iterations, debug=False):
     
     while efective_circles < iterations:
         if vertical_sampling:  # W E
-            base = w * np.random.uniform(size=(3,2,ncircles))
+            base = w * np.random.uniform(size=(3, 2, ncircles))
             min_radius = 1.5 * h
             y = np.array([h / 6., h / 2., 5 * h / 6.])
-            mu = (w / 2.) * np.ones(3)
-            sigma = .5 * w
 
-            base[0,1,:] = y[0]
-            base[1,1,:] = y[1]
-            base[2,1,:] = y[2]
-            
-            #x = w * np.random.rand(3)
-            #base[:,0,:] = w * np.random.uniform(size=(3,ncircles))
+            base[0, 1, :] = y[0]
+            base[1, 1, :] = y[1]
+            base[2, 1, :] = y[2]
 
         else:  # N S
-            base = h * np.random.uniform(size=(3,2,ncircles))
+            base = h * np.random.uniform(size=(3, 2, ncircles))
             min_radius = 1.5 * w
             x = np.array([w / 6., w / 2., 5 * w / 6.])
 
-            base[0,0,:] = x[0]
-            base[1,0,:] = x[1]
-            base[2,0,:] = x[2]
-
-
-
-            mu = (h / 2.) * np.ones(3)
-            sigma = .5 * h
-            #y = h * np.random.rand(3)
-            #base[:,1,:] = h * np.random.uniform(size=(3,ncircles))
-
+            base[0, 0, :] = x[0]
+            base[1, 0, :] = x[1]
+            base[2, 0, :] = x[2]
 
         centers_, radii_ = circle_vectorized(base)
         
         #check for minimum radii
-        valid = np.argwhere(radii_ >= min_radius)[:,0]
+        valid = np.argwhere(radii_ >= min_radius)[:, 0]
         if location == LineLocation.W:
-            valid2 = np.argwhere(centers_[0,:] >= 0)[:,0]
+            valid2 = np.argwhere(centers_[0, :] >= 0)[:, 0]
             valid = list(set(valid) & set(valid2))
         elif location == LineLocation.E:
-            valid2 = np.argwhere(centers_[0,:] < w)[:,0]
+            valid2 = np.argwhere(centers_[0, :] < w)[:, 0]
             valid = list(set(valid) & set(valid2))
             
         else:
@@ -408,10 +394,9 @@ def fit_circle_vectorized(im, location, iterations, debug=False):
 
         #print "efective_circles",efective_circles
         
-        centers = np.c_[centers,centers_[:,valid]]
-        radii = np.r_[radii,radii_[valid]]
-        
-        
+        centers = np.c_[centers, centers_[:, valid]]
+        radii = np.r_[radii, radii_[valid]]
+
     #test
     if False:
         for i in xrange(iterations):
@@ -419,8 +404,6 @@ def fit_circle_vectorized(im, location, iterations, debug=False):
             c2 = Circle.from_base(base1)
 
             #print c2.centre[0],c2.centre[1],c2.rad,centers[0,i],centers[1,i],radii[i]
-            
-
             
             #assert abs(c2.centre[0] - centers[0,i]) <= 1, "{0} {1}".format(c2.centre[0] , centers[0,i])
             #assert abs(c2.centre[1] - centers[1,i]) <= 1, "{0} {1}".format(c2.centre[1] , centers[1,i])
@@ -433,25 +416,18 @@ def fit_circle_vectorized(im, location, iterations, debug=False):
     best_q = 0  # quality(im, centre, rad);
     best_circle = Circle()
     
-    k = 0
-    k1 = 0
-    k2 = 0
-    k3 = 0
-
     for i in xrange(iterations):
-        #circle = Circle(centre=centers[:,i],rad=radii[i])
+        # circle = Circle(centre=centers[:,i],rad=radii[i])
         rad = radii[i]
 
-        q = quality(im, centers[:,i],rad,r2[i],location)
+        q = quality(im, centers[:,i], rad, r2[i], location)
 
-        if debug: print "iter", i, q, best_q
+        # if debug: print "iter", i, q, best_q
 
         if q > best_q:
             best_q = q
-            best_circle = Circle(centre=centers[:,i],rad=radii[i])
+            best_circle = Circle(centre=centers[:, i], rad=radii[i])
 
-   
-    #print iterations,k
     return best_circle
 
 
@@ -514,7 +490,6 @@ def fit_circle_loop(im, location, iterations, debug=False):
 
         k += 1
 
-
         if rad < min_radius:
             k1 += 1
             continue
@@ -544,10 +519,10 @@ def fit_circle_loop(im, location, iterations, debug=False):
 
         i += 1
 
-    print k,iterations
-    print k1,iterations
-    print k2,iterations
-    print k3,iterations
+    print k, iterations
+    print k1, iterations
+    print k2, iterations
+    print k3, iterations
 
     assert best_circle.radius > 0
     return best_circle
@@ -600,8 +575,10 @@ def fit_circle_loop(im, location, iterations, debug=False):
 
     return best_circle
 
+
 #fit_circle = fit_circle_loop
 fit_circle = fit_circle_vectorized
+
 
 def circinter(R, d, r):
     # R -- Radius first circle
@@ -678,31 +655,31 @@ def circ_eval_y(x, circle, w):
         return x2
 
 
-def find_circles(im, iterations, line_offset=4):
-
-    h, w = im.shape
-    divs = 4.
-
-    im_e = im[:, int(((divs-1) / divs) * w):]
-    im_w = im[:, 1:int((1 / divs) * w)]
-    im_n = im[:int((1 / divs) * h), :]
-    im_s = im[int(((divs-1) / divs) * h):, :]
-
-    e = fit_circle(im_e, LineLocation.E,iterations)
-    e.centre += np.array([int(((divs-1) / divs) * w), 0], np.int)
-    e.centre[0] += line_offset
-
-    w = fit_circle(im_w, LineLocation.W,iterations)
-    w.centre[0] -= line_offset
-
-    n = fit_circle(im_n, LineLocation.N,iterations)
-    n.centre[1] -= line_offset
-
-    s = fit_circle(im_s, LineLocation.S,iterations)
-    s.centre += np.array([0, int(((divs-1) / divs) * h)])
-    s.centre[1] += line_offset
-
-    return n, s, w, e
+# def find_circles(im, iterations, line_offset=4):
+#
+#     h, w = im.shape
+#     divs = 4.
+#
+#     im_e = im[:, int(((divs-1) / divs) * w):]
+#     im_w = im[:, 1:int((1 / divs) * w)]
+#     im_n = im[:int((1 / divs) * h), :]
+#     im_s = im[int(((divs-1) / divs) * h):, :]
+#
+#     e = fit_circle(im_e, LineLocation.E, iterations)
+#     e.centre += np.array([int(((divs-1) / divs) * w), 0], np.int)
+#     e.centre[0] += line_offset
+#
+#     w = fit_circle(im_w, LineLocation.W, iterations)
+#     w.centre[0] -= line_offset
+#
+#     n = fit_circle(im_n, LineLocation.N, iterations)
+#     n.centre[1] -= line_offset
+#
+#     s = fit_circle(im_s, LineLocation.S, iterations)
+#     s.centre += np.array([0, int(((divs-1) / divs) * h)])
+#     s.centre[1] += line_offset
+#
+#     return n, s, w, e
 
 
 def find_corners(im, circle_n, circle_s, circle_w, circle_e):
@@ -723,8 +700,8 @@ def rectify(original, iterations=5000, ds=7, pad=4):
 
     # detect edges
     im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
-    im = cv2.GaussianBlur(im, (0, 0), 1.5)
-    im = auto_canny(im)
+    img = cv2.GaussianBlur(im, (0, 0), 1.5)
+    im = auto_canny(img)
 
     # avoid artifacts in the edge of the image
     im[-pad:, :] = 0
@@ -732,9 +709,46 @@ def rectify(original, iterations=5000, ds=7, pad=4):
     im[:, :pad] = 0
     im[:, -pad:] = 0
 
-    h, w = im.shape
+    # h, w = im.shape
+    # circle_n, circle_s, circle_w, circle_e = find_circles(im, iterations=iterations)
 
-    circle_n, circle_s, circle_w, circle_e = find_circles(im,iterations=iterations)
+    line_offset = 4
+    h, w = im.shape
+    divs = 4.
+
+    im_e = im[:, int(((divs - 1) / divs) * w):]
+    if np.sum(im_e) <= 0:
+        print("WARNING: Image could not be rectified as no circle was fitted for the east region")
+        return original, None, None
+
+    im_w = im[:, 1:int((1 / divs) * w)]
+    if np.sum(im_w) <= 0:
+        print("WARNING: Image could not be rectified as no circle was fitted for the west region")
+        return original, None, None
+
+    im_n = im[:int((1 / divs) * h), :]
+    if np.sum(im_n) <= 0:
+        print("WARNING: Image could not be rectified as no circle was fitted for the north region")
+        return original, None, None
+
+    im_s = im[int(((divs - 1) / divs) * h):, :]
+    if np.sum(im_s) <= 0:
+        print("WARNING: Image could not be rectified as no circle was fitted for the south region")
+        return original, {}, {}
+
+    circle_e = fit_circle(im_e, LineLocation.E, iterations)
+    circle_e.centre += np.array([int(((divs - 1) / divs) * w), 0], np.int)
+    circle_e.centre[0] += line_offset
+
+    circle_w = fit_circle(im_w, LineLocation.W, iterations)
+    circle_w.centre[0] -= line_offset
+
+    circle_n = fit_circle(im_n, LineLocation.N, iterations)
+    circle_n.centre[1] -= line_offset
+
+    circle_s = fit_circle(im_s, LineLocation.S, iterations)
+    circle_s.centre += np.array([0, int(((divs - 1) / divs) * h)])
+    circle_s.centre[1] += line_offset
 
     a, b, c, d = find_corners(im, circle_n, circle_s, circle_w, circle_e)
 
@@ -793,13 +807,13 @@ def main():
     np.random.seed(2)
 
     # image_filename = '../matlab/im.tiff'
-    image_filename = 'frame-54.tiff'
+    #image_filename = 'frame-14.tiff'
+    image_filename = 'frame-39.tiff'
+
     original = cv2.imread(image_filename)
     im = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
-    h, w = im.shape
-
-    # imCanny = im
+    # imCanny = im #[0:150, :]
     # imCanny = cv2.GaussianBlur(imCanny, (0, 0), 1.5)
     # imCanny = auto_canny(imCanny)
     # plt.imshow(imCanny, cmap='Greys_r')
@@ -810,15 +824,16 @@ def main():
     rectified, circles, matches = rectify(original)
     plt.imshow(im, cmap='Greys_r')
 
-    plot_circle(circles['north'])
-    plot_circle(circles['west'])
-    plot_circle(circles['south'])
-    plot_circle(circles['east'])
+    if circles is not None:
+        plot_circle(circles['north'])
+        plot_circle(circles['west'])
+        plot_circle(circles['south'])
+        plot_circle(circles['east'])
 
-    plt.plot(matches['north'][:, 0], matches['north'][:, 1], 'oy')
-    plt.plot(matches['south'][:, 0], matches['south'][:, 1], 'oy')
-    plt.plot(matches['west'][:, 0],  matches['west'][:, 1], 'oy')
-    plt.plot(matches['east'][:, 0],  matches['east'][:, 1], 'oy')
+        plt.plot(matches['north'][:, 0], matches['north'][:, 1], 'oy')
+        plt.plot(matches['south'][:, 0], matches['south'][:, 1], 'oy')
+        plt.plot(matches['west'][:, 0],  matches['west'][:, 1], 'oy')
+        plt.plot(matches['east'][:, 0],  matches['east'][:, 1], 'oy')
 
     plt.subplot(122)
     plt.imshow(rectified)
