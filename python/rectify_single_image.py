@@ -39,6 +39,9 @@ def rectification(tube,window,date,session,pad,configuration):
     if not os.path.exists(filename):
         logging.error("filename=[%s] does not exist",filename)
         quit()
+    else:
+        logging.info("rectifying filename=[%s]",filename)
+        
 
     im = cv2.imread(filename)
     rectified, circles, matches = rectify(im,configuration.rectify.iterations,pad=pad)
@@ -55,6 +58,9 @@ def rectification(tube,window,date,session,pad,configuration):
 
     out_filename_template = os.path.join(configuration.rootfly.to_rootfly_path_template,configuration.rootfly.template)
     out_filename = utils.get_rootfly_filename(out_filename_template,tube,window,year,month,day,session)
+
+    logging.info("rectified output=[%s]",out_filename)
+
     
     cv2.imwrite(out_filename, rectified)
 
