@@ -4,7 +4,7 @@ import os.path
 import shutil
 
 def main():
-    version = 0.5
+    version = 0.6
     release_dir = 'roots_ver_{}'.format(version)
 
     if os.path.exists(release_dir):
@@ -31,6 +31,9 @@ def main():
 
     for f in scripts:
         shutil.copy(f, release_dir)
+
+    # copy other files
+    shutil.copy('changelog.txt', release_dir)
 
 
 if __name__ == "__main__":
