@@ -4,7 +4,7 @@ import os.path
 import shutil
 
 def main():
-    version = 0.6
+    version = 0.61
     release_dir = 'roots_ver_{}'.format(version)
 
     if os.path.exists(release_dir):
